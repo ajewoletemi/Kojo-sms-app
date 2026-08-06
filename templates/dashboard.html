@@ -4,33 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KOJO Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+       .dashboard-box {
+            max-width: 700px;
+            margin: 30px auto;
+            text-align: center;
+        }
+        h2 { color: #FFD700; font-size: 28px; }
+       .card {
+            background: #121212;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #333;
+            margin: 20px 0;
+            text-align: left;
+        }
+       .card h3 { color: #FFD700; margin-top: 0; }
+       .balance-amount { font-size:24px; font-weight:700; color:#00ff88; }
+       .kojo-btn {
+            background: #FFD700;
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.3s;
+        }
+       .kojo-btn:hover { background: #ffea00; }
+       .logout { color:#ff4d4d; font-weight:600; text-decoration:none; }
+    </style>
 </head>
-<body style="background: #f4f7f9;">
+<body>
     <div class="dashboard-box">
-        <h2>Welcome, {{ name }}</h2>  <!-- BONUS: Shows user name -->
-        <p style="color:#666; font-size:14px;">Manage your SMS and wallet</p>
+        <h2>Welcome, {{ name }}</h2>
+        <p style="color:#aaa;">Manage your SMS and wallet</p>
         
         <div class="card">
             <h3>Wallet Balance</h3>
-            <p style="font-size:24px; font-weight:700; color:#667eea;">₦{{ "%.2f"|format(balance) }}</p>
-            <a href="{{ url_for('fund_wallet') }}"><button>Fund Wallet</button></a>
+            <p class="balance-amount">₦{{ "%.2f"|format(balance) }}</p>
+            <a href="{{ url_for('fund_wallet') }}" class="kojo-btn">Fund Wallet</a>
         </div>
 
         <div class="card">
             <h3>Buy Virtual Number</h3>
             <p>Get a virtual number to receive SMS instantly - <b>$5</b></p>
-            <a href="{{ url_for('buy_number') }}"><button>Buy Number</button></a>
+            <a href="{{ url_for('buy_number') }}" class="kojo-btn">Buy Number</a>
         </div>
 
         <div class="card">
-            <h3>Receive SMS</h3>
-            <p>View messages sent to your virtual numbers</p>
-            <a href="{{ url_for('index') }}"><button>View Inbox</button></a>
+            <h3>Send SMS</h3>
+            <p>Send bulk messages to any number worldwide</p>
+            <a href="{{ url_for('compose') }}" class="kojo-btn">Compose SMS</a>
         </div>
         
-        <a href="{{ url_for('logout') }}" style="display:block; margin-top:20px; color:#ff4d4d; font-weight:600;">Logout</a>
+        <a href="{{ url_for('logout') }}" class="logout">Logout</a>
     </div>
 </body>
 </html>
