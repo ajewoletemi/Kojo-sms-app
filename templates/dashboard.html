@@ -1,61 +1,30 @@
 <!DOCTYPE html>
-<html>
-<head><title>KOJO Dashboard</title>
-<style>
-body{font-family:sans-serif;padding:20px;background:#f4f4f4}
-.card{background:white;padding:20px;margin:10px 0;border-radius:8px;box-shadow:0 2px 4px #ccc}
-input,select,button{padding:10px;margin:5px 0;width:100%}
-button{background:#28a745;color:white;border:none;cursor:pointer}
-.flash{background:#d4edda;padding:10px;margin-bottom:10px;border-radius:5px}
-</style>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOJO Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-<h2>KOJO Dashboard</h2>
-<a href="/logout">Logout</a> | <a href="/">Bulk Send</a>
+<body style="background: #f4f7f9;">
+    <div class="dashboard-box">
+        <h2>Welcome to KOJO Dashboard</h2>
+        <p>Balance: <b>₦{{ "%.2f"|format(balance) }}</b></p>
+        
+        <div class="card">
+            <h3>Fund Wallet</h3>
+            <p>Pay with Paystack to fund your account</p>
+            <a href="{{ url_for('fund_wallet') }}"><button>Fund Now</button></a>
+        </div>
 
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    {% for message in messages %}
-      <div class="flash">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
-<div class="card">
-  <h3>Wallet Balance: ₦{{ "%.2f"|format(balance) }}</h3>
-
-  <h4>Fund with Paystack</h4>
-  <form method="POST" action="/paystack-init">
-    <input type="number" name="amount" placeholder="Amount in Naira e.g 1000" required>
-    <button type="submit">Fund Wallet</button>
-  </form>
-
-  <h4>Fund with Bitcoin</h4>
-  <p><b>Send BTC to:</b> {{ config['BITCOIN_WALLET_ADDRESS'] }}</p>
-  <form method="POST" action="/btc-fund">
-    <input type="number" name="amount" placeholder="Amount in Naira" required>
-    <input type="text" name="tx_hash" placeholder="Paste BTC TX Hash" required>
-    <button type="submit">Submit Proof</button>
-  </form>
-</div>
-
-<div class="card">
-  <h3>Buy Number - $5/Month ≈ ₦{{ 5 * 800 }}</h3>
-  <form method="POST" action="/buy-number">
-    <select name="country" required>
-      <option value="US">USA</option>
-      <option value="NG">Nigeria</option>
-      <option value="GB">UK</option>
-      <option value="CA">Canada</option>
-    </select>
-    <button type="submit">Buy Number</button>
-  </form>
-  <h4>Your Numbers:</h4>
-  {% for num in numbers %}
-    <p>{{ num.phone_number }} - {{ num.country }}</p>
-  {% else %}
-    <p>No number yet. Buy one above.</p>
-  {% endfor %}
-</div>
+        <div class="card">
+            <h3>Buy Virtual Number</h3>
+            <p>Get a number to receive SMS - $5</p>
+            <a href="{{ url_for('buy_number') }}"><button>Buy Number</button></a>
+        </div>
+        
+        <a href="{{ url_for('logout') }}" style="display:block; margin-top:20px;">Logout</a>
+    </div>
 </body>
 </html>
