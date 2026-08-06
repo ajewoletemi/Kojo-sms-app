@@ -7,14 +7,8 @@
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
     
-    body {
-        background: #000000;
-        color: #fff;
-        display: flex;
-        min-height: 100vh;
-    }
+    body { background: #000000; color: #fff; }
     
-    /* SIDEBAR */
     .sidebar {
         width: 240px;
         background: #0A1128;
@@ -28,43 +22,24 @@
         z-index: 1000;
     }
     
-    .sidebar.hidden { left: -240px; }
-    
-    .logo {
-        color: #FFD700;
-        font-size: 24px;
-        font-weight: bold;
-        padding: 0 20px 30px;
-        letter-spacing: 2px;
-    }
+    .logo { color: #FFD700; font-size: 24px; font-weight: bold; padding: 0 20px 30px; }
     
     .menu-item {
         padding: 12px 20px;
         color: #A0AEC0;
         cursor: pointer;
-        transition: 0.3s;
         display: flex;
         align-items: center;
         gap: 10px;
     }
-    
     .menu-item:hover, .menu-item.active {
         background: #1C2E4A;
         color: #FFD700;
         border-left: 3px solid #FFD700;
     }
     
-    /* MAIN CONTENT */
-    .main {
-        flex: 1;
-        padding: 30px;
-        margin-left: 240px;
-        transition: 0.3s;
-    }
+    .main { margin-left: 240px; padding: 30px; transition: 0.3s; }
     
-    .main.full { margin-left: 0; }
-    
-    /* HAMBURGER */
     .hamburger {
         display: none;
         position: fixed;
@@ -74,25 +49,14 @@
         background: #FFD700;
         color: #000;
         border: none;
-        padding: 10px 12px;
+        padding: 10px 14px;
         border-radius: 8px;
         font-size: 20px;
         cursor: pointer;
     }
     
-    .topbar {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 30px;
-    }
-    
-    .balance {
-        background: #0A1128;
-        padding: 10px 20px;
-        border-radius: 8px;
-        border: 1px solid #1C2E4A;
-    }
-    
+    .topbar { display: flex; justify-content: flex-end; margin-bottom: 30px; }
+    .balance { background: #0A1128; padding: 10px 20px; border-radius: 8px; border: 1px solid #1C2E4A; }
     .balance span { color: #A0AEC0; }
     .balance .amount { color: #4ADE80; font-weight: bold; font-size: 18px; }
     
@@ -104,10 +68,10 @@
         padding: 25px;
         border-radius: 12px;
         border: 1px solid #1C2E4A;
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+        max-width: 700px;
     }
     
-    .card h2 { color: #FFD700; margin-bottom: 20px; font-size: 20px; }
+    .card h2 { color: #FFD700; margin-bottom: 20px; }
     label { display: block; color: #A0AEC0; margin-bottom: 8px; margin-top: 15px; font-size: 14px; }
     
     textarea, input {
@@ -118,16 +82,11 @@
         border-radius: 8px;
         color: #fff;
         font-size: 14px;
-        outline: none;
     }
-    
-    textarea:focus, input:focus {
-        border-color: #FFD700;
-        box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-    }
+    textarea:focus { border-color: #FFD700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
     
     .count { color: #A0AEC0; font-size: 13px; margin-top: 5px; }
-    .note { color: #A0AEC0; font-size: 12px; margin-top: 20px; }
+    .note { color: #A0AEC0; font-size: 12px; margin-top: 15px; }
     
     .btn {
         margin-top: 20px;
@@ -137,31 +96,34 @@
         border: none;
         border-radius: 8px;
         font-weight: bold;
-        font-size: 15px;
         cursor: pointer;
-        transition: 0.3s;
         box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
     }
+    .btn:hover { background: #FFC300; }
     
-    .btn:hover {
-        background: #FFC300;
-        transform: translateY(-2px);
-        box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+    /* OVERLAY FOR MOBILE */
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
     }
     
-    /* MOBILE RESPONSIVE */
     @media (max-width: 768px) {
         .sidebar { left: -240px; }
         .sidebar.show { left: 0; }
         .main { margin-left: 0; padding: 20px; padding-top: 70px; }
         .hamburger { display: block; }
+        .overlay.show { display: block; }
     }
 </style>
 </head>
 <body>
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
     
-    <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
         <div class="logo">KOJO</div>
         <div class="menu-item active">📊 Overview</div>
@@ -173,12 +135,9 @@
         <div class="menu-item">📦 Orders</div>
     </div>
     
-    <!-- MAIN -->
-    <div class="main" id="main">
+    <div class="main">
         <div class="topbar">
-            <div class="balance">
-                <span>BALANCE</span> <span class="amount">$0.00</span>
-            </div>
+            <div class="balance"><span>BALANCE</span> <span class="amount">$0.00</span></div>
         </div>
         
         <h1>➤ Message Compose</h1>
@@ -189,7 +148,26 @@
             
             <form method="POST" action="/send">
                 <label>Recipient numbers</label>
-                <textarea name="to" rows="6" placeholder="+2348012345678
+                <textarea name="to" rows="5" placeholder="+2348012345678
 +2348098765432
 +23470..."></textarea>
-                <div class
+                <div class="count">Paste multiple numbers, one per line</div>
+                
+                <label>Message</label>
+                <textarea name="message" rows="4" placeholder="Type your message here..."></textarea>
+                
+                <p class="note">Note: For best delivery, avoid spam words and links</p>
+                
+                <button type="submit" class="btn">Send</button>
+            </form>
+        </div>
+    </div>
+    
+<script>
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('show');
+    document.getElementById('overlay').classList.toggle('show');
+}
+</script>
+</body>
+</html>
