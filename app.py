@@ -17,7 +17,7 @@ def internal_error(error):
 
 # PAYSTACK KEYS
 PAYSTACK_SECRET_KEY = os.environ.get("sk_test_1a831f22cc05a3c963f8b31fabc7d6c8e4c6abde")
-PAYSTACK_PUBLIC_KEY = "pk_test_fa36ffafee6ee98c67e8d37dd11094f31c4b2505" # REPLACE WITH YOUR REAL KEY
+PAYSTACK_PUBLIC_KEY = "pk_test_f36ffafee66e98c67e8d37dd1109451c4b2505" # REPLACE WITH YOUR REAL KEY
 
 # DATABASE SETUP - SAFE VERSION FOR RENDER
 def init_db():
@@ -98,7 +98,8 @@ def dashboard():
     conn = sqlite3.connect('kojo.db')
     c = conn.cursor()
     c.execute("SELECT balance FROM users WHERE id =?", (session['user_id'],))
-    balance = c.fetchone()[0]
+    result = c.fetchone()
+    balance = result[0] if result else 0
     conn.close()
     return render_template('dashboard.html', name=session['name'], balance=balance)
 
