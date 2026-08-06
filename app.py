@@ -1,9 +1,9 @@
-    import os
-    if os.path.exists('kojo.db'):
-        os.remove('kojo.db') # THIS DELETES OLD DB ON STARTUP
-        from flask import Flask, render_template, request, redirect, url_for, session, flash
-import sqlite3
 import os
+if os.path.exists('kojo.db'):
+    os.remove('kojo.db') # THIS DELETES OLD DB ON STARTUP
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+import sqlite3
 import requests
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -11,8 +11,8 @@ app = Flask(__name__)
 app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"
 
 # READ KEYS
-PAYSTACK_SECRET_KEY = os.environ.get("pk_test_fa36ffafee6ee98c67e8d37dd11094f31c4b2505")
-PAYSTACK_PUBLIC_KEY = "sk_test_1a831f22cc05a3c963f8b31fabc7d6c8e4c6abde" 
+PAYSTACK_SECRET_KEY = os.environ.get("sk_test_1a831f22cc05a3c963f8b31fabc7d6c8e4c6abde")
+PAYSTACK_PUBLIC_KEY = "pk_test_fa36ffafee6ee98c67e8d37dd11094f31c4b2505" 
 
 def init_db():
     conn = sqlite3.connect('kojo.db')
@@ -96,14 +96,14 @@ def dashboard():
 def compose():
     if 'user_id' not in session: return redirect(url_for('login'))
     user = get_user_data(session['user_id'])
-    if not user: return redirect(url_for('logout')) # safety check
+    if not user: return redirect(url_for('logout'))
     return render_template('compose.html', balance=user['balance'])
 
 @app.route('/fund_wallet')
 def fund_wallet():
     if 'user_id' not in session: return redirect(url_for('login'))
     user = get_user_data(session['user_id'])
-    if not user: # THIS IS THE NEW SAFETY CHECK
+    if not user:
         session.clear()
         flash("Session expired. Please login again.", "danger")
         return redirect(url_for('login'))
