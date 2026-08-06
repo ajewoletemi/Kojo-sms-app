@@ -1,42 +1,26 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify
 from twilio.rest import Client
 import os
 
-app = Flask(__name__, template_folder='Templates')
+app = Flask(__name__)
 
-# Get keys from Render Environment Variables
-account_sid = os.environ.get('TWILIO_SID')
-auth_token = os.environ.get('TWILIO_TOKEN')
-twilio_number = os.environ.get('TWILIO_NUMBER')
-
-@app.route('/', methods=['GET'])
-def home():
-    return render_template('index.html')
-
-@app.route('/send_sms', methods=['POST'])
+@app.route('/send-sms', methods=['POST'])
 def send_sms():
-    message = request.form.get('message')
-    numbers = request.form.get('number')
+    data = request.json
+    to_number = data['to']
+    message_body = data['message']
     
-    # Split numbers by comma
-    number_list = [num.strip() for num in numbers.split(',')]
+    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
+    from_number = os.environ.get('TWILIO_PHONE_NUMBER')
     
     client = Client(account_sid, auth_token)
-    sent = []
-    
-    for num in number_list:
-        try:
-            client.messages.create(
-                body=message,
-                from_=twilio_number,
-                to=num
-            )
-            sent.append(num)
-        except Exception as e:
-            return jsonify({"status": "error", "message": str(e)})
-    
-    return jsonify({"status": "success", "message": f"SMS sent to {len(sent)} numbers"})
+    message = client.messages.create(
+        body=message_body,
+        from_=from_number,
+        to=to_number
+    )
+    return jsonify({"sid": message.sid, "status": "sent"})
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run()
