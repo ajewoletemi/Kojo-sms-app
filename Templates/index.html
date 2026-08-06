@@ -17,10 +17,18 @@
     /* SIDEBAR */
     .sidebar {
         width: 240px;
-        background: #0A1128; /* Dark Blue */
+        background: #0A1128;
         padding: 20px 0;
         border-right: 1px solid #1C2E4A;
+        position: fixed;
+        height: 100%;
+        left: 0;
+        top: 0;
+        transition: 0.3s;
+        z-index: 1000;
     }
+    
+    .sidebar.hidden { left: -240px; }
     
     .logo {
         color: #FFD700;
@@ -50,6 +58,26 @@
     .main {
         flex: 1;
         padding: 30px;
+        margin-left: 240px;
+        transition: 0.3s;
+    }
+    
+    .main.full { margin-left: 0; }
+    
+    /* HAMBURGER */
+    .hamburger {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: #FFD700;
+        color: #000;
+        border: none;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 20px;
+        cursor: pointer;
     }
     
     .topbar {
@@ -68,16 +96,8 @@
     .balance span { color: #A0AEC0; }
     .balance .amount { color: #4ADE80; font-weight: bold; font-size: 18px; }
     
-    h1 {
-        color: #FFD700;
-        margin-bottom: 8px;
-        font-size: 28px;
-    }
-    
-    .subtitle {
-        color: #A0AEC0;
-        margin-bottom: 30px;
-    }
+    h1 { color: #FFD700; margin-bottom: 8px; font-size: 28px; }
+    .subtitle { color: #A0AEC0; margin-bottom: 30px; }
     
     .card {
         background: #0A1128;
@@ -87,19 +107,8 @@
         box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
     }
     
-    .card h2 {
-        color: #FFD700;
-        margin-bottom: 20px;
-        font-size: 20px;
-    }
-    
-    label {
-        display: block;
-        color: #A0AEC0;
-        margin-bottom: 8px;
-        margin-top: 15px;
-        font-size: 14px;
-    }
+    .card h2 { color: #FFD700; margin-bottom: 20px; font-size: 20px; }
+    label { display: block; color: #A0AEC0; margin-bottom: 8px; margin-top: 15px; font-size: 14px; }
     
     textarea, input {
         width: 100%;
@@ -117,17 +126,8 @@
         box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
     }
     
-    .count {
-        color: #A0AEC0;
-        font-size: 13px;
-        margin-top: 5px;
-    }
-    
-    .note {
-        color: #A0AEC0;
-        font-size: 12px;
-        margin-top: 20px;
-    }
+    .count { color: #A0AEC0; font-size: 13px; margin-top: 5px; }
+    .note { color: #A0AEC0; font-size: 12px; margin-top: 20px; }
     
     .btn {
         margin-top: 20px;
@@ -148,11 +148,21 @@
         transform: translateY(-2px);
         box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
     }
+    
+    /* MOBILE RESPONSIVE */
+    @media (max-width: 768px) {
+        .sidebar { left: -240px; }
+        .sidebar.show { left: 0; }
+        .main { margin-left: 0; padding: 20px; padding-top: 70px; }
+        .hamburger { display: block; }
+    }
 </style>
 </head>
 <body>
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    
     <!-- SIDEBAR -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="logo">KOJO</div>
         <div class="menu-item active">📊 Overview</div>
         <div class="menu-item">➤ Send</div>
@@ -164,7 +174,7 @@
     </div>
     
     <!-- MAIN -->
-    <div class="main">
+    <div class="main" id="main">
         <div class="topbar">
             <div class="balance">
                 <span>BALANCE</span> <span class="amount">$0.00</span>
@@ -182,16 +192,4 @@
                 <textarea name="to" rows="6" placeholder="+2348012345678
 +2348098765432
 +23470..."></textarea>
-                <div class="count">Paste multiple numbers, one per line</div>
-                
-                <label>Message</label>
-                <textarea name="message" rows="4" placeholder="Type your message here..."></textarea>
-                
-                <p class="note">Note: For best delivery, avoid spam words and links</p>
-                
-                <button type="submit" class="btn">Send</button>
-            </form>
-        </div>
-    </div>
-</body>
-</html>
+                <div class
