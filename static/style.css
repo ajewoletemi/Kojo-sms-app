@@ -1,39 +1,108 @@
+/* KOJO BRANDING - FULL CSS */
 body {
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
+    padding: 20px;
 }
+
+/* LOGIN / SIGNUP BOX */
 .login-box {
     background: white;
     padding: 40px;
     border-radius: 15px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    width: 350px;
+    width: 100%;
+    max-width: 380px;
     text-align: center;
 }
 .login-box h2 {
     color: #667eea;
+    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: 28px;
+}
+.login-box p {
+    color: #666;
     margin-bottom: 20px;
+    font-size: 14px;
 }
 .login-box input {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
     margin: 10px 0;
     border: 1px solid #ddd;
     border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 15px;
 }
 .login-box button {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
     background: #667eea;
     color: white;
     border: none;
     border-radius: 8px;
     font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
+    margin-top: 10px;
+    transition: 0.3s;
 }
-.login-box a { color: #667eea; text-decoration: none; }
+.login-box button:hover {
+    background: #764ba2;
+}
+.login-box a { 
+    color: #667eea; 
+    text-decoration: none; 
+    font-weight: 600;
+}
+.login-box a:hover { text-decoration: underline; }
+
+
+/* DASHBOARD / INDEX BOX - PUT THIS BELOW LOGIN STYLE */
+.dashboard-box {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 650px;
+    margin: 50px auto;
+    text-align: center;
+}
+.dashboard-box h2 {
+    color: #667eea;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.card {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 10px;
+    margin: 20px 0;
+    text-align: left;
+    border-left: 4px solid #667eea;
+}
+.card h3 {
+    color: #333;
+    margin-top: 0;
+}
+.card button {
+    padding: 12px 25px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.card button:hover {
+    background: #764ba2;
+}
