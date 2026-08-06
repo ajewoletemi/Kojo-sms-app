@@ -4,7 +4,7 @@ import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "kojo_secret_key_123" # Change this to anything random
+app.secret_key = "kojo_secret_key_123"
 
 # DATABASE SETUP
 def init_db():
@@ -24,11 +24,11 @@ def index():
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
-# SIGNUP PAGE - THIS IS WHERE WE ADDED NAME
+# SIGNUP
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        name = request.form['name'] # <-- NEW LINE
+        name = request.form['name']
         email = request.form['email']
         password = request.form['password']
         hashed_password = generate_password_hash(password)
@@ -36,7 +36,7 @@ def signup():
         conn = sqlite3.connect('kojo.db')
         c = conn.cursor()
         try:
-            c.execute("INSERT INTO users (name, email, password) VALUES (?,?,?)", (name, email, hashed_password)) # <-- ADDED NAME
+            c.execute("INSERT INTO users (name, email, password) VALUES (?,?,?)", (name, email, hashed_password))
             conn.commit()
             flash("Account created successfully! Please login.", "success")
             return redirect(url_for('login'))
@@ -46,8 +46,7 @@ def signup():
             conn.close()
     return render_template('signup.html')
 
-
-# LOGIN PAGE
+# LOGIN
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -60,16 +59,15 @@ def login():
         user = c.fetchone()
         conn.close()
 
-        if user and check_password_hash(user[3], password): # user[3] is password, user[1] is name
+        if user and check_password_hash(user[3], password):
             session['user_id'] = user[0]
-            session['user_name'] = user[1] # <-- SAVE NAME TO SESSION
+            session['user_name'] = user[1]
             return redirect(url_for('dashboard'))
         else:
             flash("Invalid email or password", "danger")
     return render_template('login.html')
 
-
-# DASHBOARD PAGE
+# DASHBOARD
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
@@ -81,8 +79,30 @@ def dashboard():
     balance = c.fetchone()[0]
     conn.close()
 
-    return render_template('dashboard.html', balance=balance, name=session['user_name']) # <-- SEND NAME TO DASHBOARD
+    return render_template('dashboard.html', balance=balance, name=session['user_name'])
 
+# COMPOSE SMS PAGE - NEW
+@app.route('/compose')
+def compose():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = sqlite3.connect('kojo.db')
+    c = conn.cursor()
+    c.execute("SELECT balance FROM users WHERE id =?", (session['user_id'],))
+    balance = c.fetchone()[0]
+    conn.close()
+
+    return render_template('compose.html', balance=balance)
+
+# SEND SMS - PLACEHOLDER
+@app.route('/send_sms', methods=['POST'])
+def send_sms():
+    # We will connect real SMS API here later
+    numbers = request.form['numbers']
+    message = request.form['message']
+    flash(f"SMS would be sent to {len(numbers.split())} numbers. API coming soon!", "info")
+    return redirect(url_for('compose'))
 
 # LOGOUT
 @app.route('/logout')
@@ -90,8 +110,7 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-
-# PLACEHOLDER ROUTES
+# PLACEHOLDERS
 @app.route('/fund_wallet')
 def fund_wallet():
     return "Paystack Integration Coming Soon"
@@ -99,7 +118,6 @@ def fund_wallet():
 @app.route('/buy_number')
 def buy_number():
     return "Buy Number Page Coming Soon"
-
 
 if __name__ == '__main__':
     app.run(debug=True)
