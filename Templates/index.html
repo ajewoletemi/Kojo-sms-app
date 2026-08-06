@@ -12,7 +12,7 @@
     .sidebar {
         width: 240px;
         background: #0A1128;
-        padding: 20px 0;
+        padding: 70px 0 20px 0; /* ADDED 70px TOP PADDING SO BUTTON NO COVER AM */
         border-right: 1px solid #1C2E4A;
         position: fixed;
         height: 100%;
@@ -101,7 +101,6 @@
     }
     .btn:hover { background: #FFC300; }
     
-    /* OVERLAY FOR MOBILE */
     .overlay {
         display: none;
         position: fixed;
@@ -112,7 +111,7 @@
     }
     
     @media (max-width: 768px) {
-        .sidebar { left: -240px; }
+        .sidebar { left: -240px; padding-top: 70px; } /* KEEP THE PADDING FOR MOBILE TOO */
         .sidebar.show { left: 0; }
         .main { margin-left: 0; padding: 20px; padding-top: 70px; }
         .hamburger { display: block; }
@@ -148,10 +147,11 @@
             
             <form method="POST" action="/send">
                 <label>Recipient numbers</label>
-                <textarea name="to" rows="5" placeholder="+2348012345678
-+2348098765432
-+23470..."></textarea>
-                <div class="count">Paste multiple numbers, one per line</div>
+                <textarea name="to" rows="5" placeholder="+1234567890
++447911123456
++2348012345678
++919876543210"></textarea>
+                <div class="count">Paste multiple numbers, one per line. Use international format e.g +1, +44, +234</div>
                 
                 <label>Message</label>
                 <textarea name="message" rows="4" placeholder="Type your message here..."></textarea>
