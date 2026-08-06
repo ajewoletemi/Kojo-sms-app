@@ -9,22 +9,28 @@
 </head>
 <body style="background: #f4f7f9;">
     <div class="dashboard-box">
-        <h2>Welcome to KOJO Dashboard</h2>
-        <p>Balance: <b>₦{{ "%.2f"|format(balance) }}</b></p>
+        <h2>Welcome, {{ name }}</h2>  <!-- BONUS: Shows user name -->
+        <p style="color:#666; font-size:14px;">Manage your SMS and wallet</p>
         
         <div class="card">
-            <h3>Fund Wallet</h3>
-            <p>Pay with Paystack to fund your account</p>
-            <a href="{{ url_for('fund_wallet') }}"><button>Fund Now</button></a>
+            <h3>Wallet Balance</h3>
+            <p style="font-size:24px; font-weight:700; color:#667eea;">₦{{ "%.2f"|format(balance) }}</p>
+            <a href="{{ url_for('fund_wallet') }}"><button>Fund Wallet</button></a>
         </div>
 
         <div class="card">
             <h3>Buy Virtual Number</h3>
-            <p>Get a number to receive SMS - $5</p>
+            <p>Get a virtual number to receive SMS instantly - <b>$5</b></p>
             <a href="{{ url_for('buy_number') }}"><button>Buy Number</button></a>
         </div>
+
+        <div class="card">
+            <h3>Receive SMS</h3>
+            <p>View messages sent to your virtual numbers</p>
+            <a href="{{ url_for('index') }}"><button>View Inbox</button></a>
+        </div>
         
-        <a href="{{ url_for('logout') }}" style="display:block; margin-top:20px;">Logout</a>
+        <a href="{{ url_for('logout') }}" style="display:block; margin-top:20px; color:#ff4d4d; font-weight:600;">Logout</a>
     </div>
 </body>
 </html>
