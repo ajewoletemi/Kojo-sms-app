@@ -1,22 +1,44 @@
 <!DOCTYPE html><html><head><title>Dashboard - KOJO</title>
 <style>
 body{background:#000; color:#fff; font-family:Arial; margin:0;}
-.navbar{background:#0033cc; padding:15px; display:flex; justify-content:space-between;}
-.navbar a{color:#FFD700; text-decoration:none; font-weight:bold;}
+.navbar{background:#0033cc; padding:15px; display:flex; justify-content:space-between; align-items:center;}
+.navbar a{color:#FFD700; text-decoration:none; font-weight:bold; margin-left:15px;}
 .container{padding:30px;}
-.card{background:#111; padding:20px; border-radius:10px; border-left:4px solid #FFD700; margin:20px 0;}
-.btn{background:#FFD700; color:#000; padding:10px 20px; text-decoration:none; border-radius:5px; font-weight:bold;}
+.card{background:#111; padding:25px; border-radius:10px; border-left:4px solid #FFD700; margin:20px 0;}
+.btn{background:#FFD700; color:#000; padding:12px 25px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block; margin-right:10px;}
+.btn:hover{background:#fff; color:#0033cc;}
+.btn-blue{background:#0033cc; color:#FFD700;}
+.flash{padding:10px; background:#222; border-radius:5px; margin-bottom:15px; color:#FFD700;}
 </style></head><body>
 <div class="navbar">
-<span style="color:#FFD700;">KOJO SMS</span>
+<span style="color:#FFD700; font-size:20px;">KOJO SMS</span>
+<div>
+<a href="/dashboard">Dashboard</a>
+<a href="/compose">Send SMS</a>
 <a href="/logout">Logout</a>
 </div>
+</div>
+
 <div class="container">
 <h2>Welcome, {{ name }}</h2>
-{% with messages = get_flashed_messages() %}{% for message in messages %}<p style="color:#FFD700;">{{ message }}</p>{% endfor %}{% endwith %}
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+{% endif %}
+{% endwith %}
+
 <div class="card">
 <h3>Wallet Balance</h3>
-<h1 style="color:#FFD700;">NGN {{ balance }}</h1>
+<h1 style="color:#FFD700; font-size:36px;">NGN {{ balance }}</h1>
 <a href="/fund_wallet" class="btn">Fund Wallet</a>
+<a href="/compose" class="btn btn-blue">Send SMS</a>
 </div>
+
+<div class="card">
+<h3 style="color:#FFD700;">Quick Actions</h3>
+<p>Buy Numbers | View Inbox | Transaction History</p>
+<p style="color:#aaa;">More features coming soon...</p>
+</div>
+
 </div></body></html>
