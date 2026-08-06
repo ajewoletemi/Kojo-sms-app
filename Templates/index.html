@@ -2,213 +2,85 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOJO SMS Dashboard</title>
+<title>KOJO Bulk SMS Sender</title>
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-    
-    body { background: #000; color: #fff; }
-    
-    .sidebar {
-        width: 240px;
-        background: #0A1128;
-        padding: 70px 0 20px 0;
-        border-right: 1px solid #1C2E4A;
-        position: fixed;
-        height: 100%;
-        left: 0;
-        top: 0;
-        transition: 0.3s;
-        z-index: 1000;
-    }
-    
-    .logo { color: #FFD700; font-size: 24px; font-weight: bold; padding: 0 20px 30px; }
-    
-    .menu-item {
-        padding: 12px 20px;
-        color: #A0AEC0;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .menu-item:hover, .menu-item.active {
-        background: #1C2E4A;
-        color: #FFD700;
-        border-left: 3px solid #FFD700;
-    }
-    
-    .main { margin-left: 240px; padding: 30px; transition: 0.3s; }
-    
-    .hamburger {
-        display: none;
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        z-index: 1001;
-        background: #FFD700;
-        color: #000;
-        border: none;
-        padding: 10px 14px;
-        border-radius: 8px;
-        font-size: 20px;
-        cursor: pointer;
-    }
-    
-    .topbar { display: flex; justify-content: flex-end; margin-bottom: 30px; }
-    .balance { background: #0A1128; padding: 10px 20px; border-radius: 8px; border: 1px solid #1C2E4A; }
-    .balance span { color: #A0AEC0; }
-    .balance .amount { color: #4ADE80; font-weight: bold; font-size: 18px; }
-    
-    h1 { color: #FFD700; margin-bottom: 8px; font-size: 28px; }
-    .subtitle { color: #A0AEC0; margin-bottom: 30px; }
-    
-    .card {
-        background: #0A1128;
-        padding: 25px;
-        border-radius: 12px;
-        border: 1px solid #1C2E4A;
-        max-width: 700px;
-    }
-    
-    .card h2 { color: #FFD700; margin-bottom: 20px; }
-    label { display: block; color: #A0AEC0; margin-bottom: 8px; margin-top: 15px; font-size: 14px; }
-    
-    textarea, input {
-        width: 100%;
-        padding: 12px;
-        background: #000;
-        border: 1px solid #1C2E4A;
-        border-radius: 8px;
-        color: #fff;
-        font-size: 14px;
-    }
-    textarea:focus { border-color: #FFD700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
-    
-    .count { color: #A0AEC0; font-size: 13px; margin-top: 5px; }
-    .note { color: #A0AEC0; font-size: 12px; margin-top: 15px; }
-    
-    .btn {
-        margin-top: 20px;
-        padding: 12px 30px;
-        background: #FFD700;
-        color: #000;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-    }
-    .btn:hover { background: #FFC300; }
-    
-    .overlay {
-        display: none;
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 999;
-    }
-    
-    #statusMsg { margin-top: 15px; font-size: 14px; }
-    
-    @media (max-width: 768px) {
-        .sidebar { left: -240px; padding-top: 70px; }
-        .sidebar.show { left: 0; }
-        .main { margin-left: 0; padding: 20px; padding-top: 70px; }
-        .hamburger { display: block; }
-        .overlay.show { display: block; }
-    }
+  body{font-family:Arial,sans-serif;background:#f7f9fc;margin:0;padding:20px}
+ .nav{display:flex;justify-content:space-between;margin-bottom:20px}
+ .nav a{text-decoration:none;background:#007bff;color:white;padding:8px 15px;border-radius:5px}
+ .container{max-width:700px;margin:auto;background:white;padding:25px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+  textarea,input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:5px}
+  button{background:#28a745;color:white;border:none;padding:12px 20px;border-radius:5px;cursor:pointer;width:100%;font-size:16px}
+  button:hover{background:#218838}
+ .info{background:#e7f3ff;padding:10px;border-left:4px solid #007bff;margin-bottom:15px}
+  #result{margin-top:15px;font-weight:bold}
 </style>
 </head>
 <body>
-    <button class="hamburger" onclick="toggleSidebar()">☰</button>
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-    
-    <div class="sidebar" id="sidebar">
-        <div class="logo">KOJO</div>
-        <div class="menu-item active">📊 Overview</div>
-        <div class="menu-item">➤ Send</div>
-        <div class="menu-item">📝 Logs</div>
-        <div class="menu-item">💰 Deposit</div>
-        <div class="menu-item">🔑 License</div>
-        <div class="menu-item">💳 Pricing</div>
-        <div class="menu-item">📦 Orders</div>
-    </div>
-    
-    <div class="main">
-        <div class="topbar">
-            <div class="balance"><span>BALANCE</span> <span class="amount">$0.00</span></div>
-        </div>
-        
-        <h1>➤ Message Compose</h1>
-        <p class="subtitle">Compose and send supported messages.</p>
-        
-        <div class="card">
-            <h2>Compose SMS</h2>
-            
-            <!-- I REMOVE action="/send" BECAUSE JS GO HANDLE AM NOW -->
-            <form id="smsForm">
-                <label>Recipient numbers</label>
-                <textarea id="phoneInput" rows="5" placeholder="+2348012345678
-+2349067415223"></textarea>
-                <div class="count">Paste multiple numbers, one per line. Use international format e.g +234</div>
-                
-                <label>Message</label>
-                <textarea id="messageInput" rows="4" placeholder="Type your message here..."></textarea>
-                
-                <p class="note">Note: For best delivery, avoid spam words and links</p>
-                
-                <button type="submit" id="sendBtn" class="btn">Send</button>
-                <div id="statusMsg"></div>
-            </form>
-        </div>
-    </div>
-    
+
+<div class="nav">
+  <h2>KOJO Bulk SMS</h2>
+  <div>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/logout" style="background:#dc3545">Logout</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="info">
+    <b>Rate: ₦200 per SMS</b> to any country.
+    <br>You must buy a number + fund wallet first.
+  </div>
+
+  <label>Paste Numbers or Upload CSV</label>
+  <textarea id="to" rows="5" placeholder="Example: +2348012345678,+12025550123,+447..."></textarea>
+  <input type="file" id="csvFile" accept=".csv">
+
+  <label>Message</label>
+  <textarea id="message" rows="4" placeholder="Type your SMS here..." onkeyup="countChars()"></textarea>
+  <p>Characters: <span id="charCount">0</span> | SMS Parts: <span id="smsParts">1</span></p>
+
+  <button onclick="sendSMS()">Send Bulk SMS</button>
+  <p id="result"></p>
+</div>
+
 <script>
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('show');
-    document.getElementById('overlay').classList.toggle('show');
+// Character counter for SMS
+function countChars(){
+  let msg = document.getElementById('message').value;
+  document.getElementById('charCount').innerText = msg.length;
+  document.getElementById('smsParts').innerText = Math.ceil(msg.length / 160) || 1;
 }
 
-// NEW: THIS ONE GO SEND SMS TO YOUR RENDER BACKEND
-document.getElementById('smsForm').addEventListener('submit', async function(e) {
-    e.preventDefault(); // stop normal form submit
-    
-    const statusDiv = document.getElementById('statusMsg');
-    const phoneText = document.getElementById('phoneInput').value.trim();
-    const message = document.getElementById('messageInput').value.trim();
-    
-    if(!phoneText || !message) {
-        statusDiv.innerHTML = '<span style="color:red">Please enter phone number and message</span>';
-        return;
-    }
-    
-    statusDiv.innerHTML = '<span style="color:#FFD700">Sending...</span>';
-    
-    // Split numbers by new line and send one by one
-    const numbers = phoneText.split('\n').filter(n => n.trim() !== '');
-    
-    for(let number of numbers) {
-        try {
-            const response = await fetch("https://kojo-sms-app.onrender.com/send-sms", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ to: number.trim(), message: message })
-            });
-            
-            const data = await response.json();
-            
-            if(response.ok) {
-                statusDiv.innerHTML += `<br><span style="color:#4ADE80">Sent to ${number}: ${data.status}</span>`;
-            } else {
-                statusDiv.innerHTML += `<br><span style="color:red">Failed ${number}: ${data.error || 'Error'}</span>`;
-            }
-        } catch(error) {
-            statusDiv.innerHTML += `<br><span style="color:red">Failed ${number}: Network Error</span>`;
-        }
-    }
+// Read CSV and put numbers in textarea
+document.getElementById('csvFile').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event){
+    let numbers = event.target.result.split(/[\n,]/).map(n=>n.trim()).filter(n=>n);
+    document.getElementById('to').value = numbers.join(',');
+  }
+  reader.readAsText(file);
 });
+
+// Send SMS function
+function sendSMS(){
+  let to = document.getElementById('to').value;
+  let message = document.getElementById('message').value;
+  document.getElementById('result').innerText = "Sending...";
+
+  fetch('/send-sms', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({to: to, message: message})
+  })
+ .then(r=>r.json())
+ .then(d=>{
+    document.getElementById('result').innerText = d.status || d.error;
+    if(d.status){ document.getElementById('to').value = ""; document.getElementById('message').value = ""; }
+  })
+ .catch(err=>{document.getElementById('result').innerText = "Error: " + err});
+}
 </script>
 </body>
 </html>
