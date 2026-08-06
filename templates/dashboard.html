@@ -1,6 +1,22 @@
-<!DOCTYPE html><html><head><title>Dashboard - KOJO</title></head><body style="padding:30px;">
-<h2>Welcome {{ name }}</h2>
-{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<p style="color:green;">{{ message }}</p>{% endfor %}{% endwith %}
-<h3>Wallet Balance: NGN {{ balance }}</h3>
-<a href="/fund_wallet">Fund Wallet</a> | <a href="/logout">Logout</a>
-</body></html>
+<!DOCTYPE html><html><head><title>Dashboard - KOJO</title>
+<style>
+body{background:#000; color:#fff; font-family:Arial; margin:0;}
+.navbar{background:#0033cc; padding:15px; display:flex; justify-content:space-between;}
+.navbar a{color:#FFD700; text-decoration:none; font-weight:bold;}
+.container{padding:30px;}
+.card{background:#111; padding:20px; border-radius:10px; border-left:4px solid #FFD700; margin:20px 0;}
+.btn{background:#FFD700; color:#000; padding:10px 20px; text-decoration:none; border-radius:5px; font-weight:bold;}
+</style></head><body>
+<div class="navbar">
+<span style="color:#FFD700;">KOJO SMS</span>
+<a href="/logout">Logout</a>
+</div>
+<div class="container">
+<h2>Welcome, {{ name }}</h2>
+{% with messages = get_flashed_messages() %}{% for message in messages %}<p style="color:#FFD700;">{{ message }}</p>{% endfor %}{% endwith %}
+<div class="card">
+<h3>Wallet Balance</h3>
+<h1 style="color:#FFD700;">NGN {{ balance }}</h1>
+<a href="/fund_wallet" class="btn">Fund Wallet</a>
+</div>
+</div></body></html>
