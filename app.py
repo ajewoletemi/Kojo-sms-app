@@ -8,37 +8,29 @@ import requests
 app = Flask(__name__)
 app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"
 
-# THIS WILL PRINT THE REAL ERROR IN RENDER LOGS
 @app.errorhandler(500)
 def internal_error(error):
     print("=== 500 ERROR ===")
     print(traceback.format_exc())
     return "SERVER ERROR. Check Render Logs for details.", 500
 
-# PAYSTACK KEYS
 PAYSTACK_SECRET_KEY = os.environ.get("sk_test_1a831f22cc05a3c963f8b31fabc7d6c8e4c6abde")
-PAYSTACK_PUBLIC_KEY = "pk_test_f36ffafee66e98c67e8d37dd1109451c4b2505" # REPLACE WITH YOUR REAL KEY
+PAYSTACK_PUBLIC_KEY = "pk_test_f36ffafee66e98c67e8d37dd1109451c4b2505"
 
-# DATABASE SETUP - SAFE VERSION FOR RENDER
 def init_db():
     conn = sqlite3.connect('kojo.db')
     c = conn.cursor()
-    # Create table with balance from the start
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY, name TEXT, email TEXT UNIQUE, password TEXT, balance REAL DEFAULT 0)''')
-    
-    # Try to add balance column if table already existed without it
     try:
         c.execute("ALTER TABLE users ADD COLUMN balance REAL DEFAULT 0")
     except sqlite3.OperationalError:
-        pass # Column already exists, that's fine
-        
+        pass
     conn.commit()
     conn.close()
 
 init_db()
 
-# LOGIN REQUIRED DECORATOR
 def login_required(f):
     from functools import wraps
     @wraps(f)
@@ -115,19 +107,14 @@ def fund_wallet():
     if request.method == 'POST':
         amount = float(request.form['amount'])
         email = request.form['email']
-        
         headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
-        data = {'email': email, 'amount': int(amount * 100)} # Paystack uses kobo
-        
+        data = {'email': email, 'amount': int(amount * 100)}
         response = requests.post('https://api.paystack.co/transaction/initialize', headers=headers, json=data)
         res_data = response.json()
-        
         if res_data['status']:
-            authorization_url = res_data['data']['authorization_url']
-            return redirect(authorization_url)
+            return redirect(res_data['data']['authorization_url'])
         else:
             flash("Payment initialization failed", "danger")
-            
     return render_template('fund_wallet.html', PAYSTACK_PUBLIC_KEY=PAYSTACK_PUBLIC_KEY)
 
 @app.route('/verify_payment')
@@ -137,9 +124,8 @@ def verify_payment():
     headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
     response = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
     res_data = response.json()
-    
     if res_data['status'] and res_data['data']['status'] == 'success':
-        amount = res_data['data']['amount'] / 100 # Convert from kobo
+        amount = res_data['data']['amount'] / 100
         conn = sqlite3.connect('kojo.db')
         c = conn.cursor()
         c.execute("UPDATE users SET balance = balance +? WHERE id =?", (amount, session['user_id']))
@@ -150,6 +136,12 @@ def verify_payment():
     else:
         flash("Payment verification failed", "danger")
         return redirect(url_for('fund_wallet'))
+
+# NEW ROUTE TO FIX THE ERROR
+@app.route('/compose')
+@login_required
+def compose():
+    return "Compose SMS page - Coming Soon"
 
 if __name__ == '__main__':
     app.run(debug=True)
