@@ -1,8 +1,10 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import traceback
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"app = Flask(__name__)
 app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"
 
 # THIS WILL PRINT THE REAL ERROR IN RENDER LOGS
