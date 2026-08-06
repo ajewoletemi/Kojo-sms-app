@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KOJO Bulk SMS Sender</title>
+<style>
+  body{font-family:Arial,sans-serif;background:#f7f9fc;margin:0;padding:20px}
+ .nav{display:flex;justify-content:space-between;margin-bottom:20px}
+ .nav a{text-decoration:none;background:#007bff;color:white;padding:8px 15px;border-radius:5px}
+ .container{max-width:700px;margin:auto;background:white;padding:25px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+  textarea,input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:5px}
+  button{background:#28a745;color:white;border:none;padding:12px 20px;border-radius:5px;cursor:pointer;width:100%;font-size:16px}
+  button:hover{background:#218838}
+ .info{background:#e7f3ff;padding:10px;border-left:4px solid #007bff;margin-bottom:15px}
+  #result{margin-top:15px;font-weight:bold}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <h2>KOJO Bulk SMS</h2>
+  <div>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/logout" style="background:#dc3545">Logout</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="info">
+    <b>Rate: ₦200 per SMS</b> to any country.
+    <br>You must buy a number + fund wallet first.
+  </div>
+
+  <label>Paste Numbers or Upload CSV</label>
+  <textarea id="to" rows="5" placeholder="Example: +2348012345678,+12025550123,+447..."></textarea>
+  <input type="file" id="csvFile" accept=".csv">
+
+  <label>Message</label>
+  <textarea id="message" rows="4" placeholder="Type your SMS here..." onkeyup="countChars()"></textarea>
+  <p>Characters: <span id="charCount">0</span> | SMS Parts: <span id="smsParts">1</span></p>
+
+  <button onclick="sendSMS()">Send Bulk SMS</button>
+  <p id="result"></p>
+</div>
+
+<script>
+// Character counter for SMS
+function countChars(){
+  let msg = document.getElementById('message').value;
+  document.getElementById('charCount').innerText = msg.length;
+  document.getElementById('smsParts').innerText = Math.ceil(msg.length / 160) || 1;
+}
+
+// Read CSV and put numbers in textarea
+document.getElementById('csvFile').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event){
+    let numbers = event.target.result.split(/[\n,]/).map(n=>n.trim()).filter(n=>n);
+    document.getElementById('to').value = numbers.join(',');
+  }
+  reader.readAsText(file);
+});
+
+// Send SMS function
+function sendSMS(){
+  let to = document.getElementById('to').value;
+  let message = document.getElementById('message').value;
+  document.getElementById('result').innerText = "Sending...";
+
+  fetch('/send-sms', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({to: to, message: message})
+  })
+ .then(r=>r.json())
+ .then(d=>{
+    document.getElementById('result').innerText = d.status || d.error;
+    if(d.status){ document.getElementById('to').value = ""; document.getElementById('message').value = ""; }
+  })
+ .catch(err=>{document.getElementById('result').innerText = "Error: " + err});
+}
+</script>
+</body>
+</html>
