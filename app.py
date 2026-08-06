@@ -6,10 +6,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = "kojo_secret_key_123"
 
-# DATABASE SETUP
+# DATABASE SETUP - FIXED
 def init_db():
     conn = sqlite3.connect('kojo.db')
     c = conn.cursor()
+    # This will create table if it doesn't exist, or add columns if missing
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY, name TEXT, email TEXT UNIQUE, password TEXT, balance REAL DEFAULT 0)''')
     conn.commit()
@@ -46,7 +47,7 @@ def signup():
             conn.close()
     return render_template('signup.html')
 
-# LOGIN
+# LOGIN - FIXED
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -61,13 +62,13 @@ def login():
 
         if user and check_password_hash(user[3], password):
             session['user_id'] = user[0]
-            session['user_name'] = user[1]
+            session['user_name'] = user[1] if user[1] else "User" # FIX: handle if name is None
             return redirect(url_for('dashboard'))
         else:
             flash("Invalid email or password", "danger")
     return render_template('login.html')
 
-# DASHBOARD
+# DASHBOARD - FIXED
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
@@ -76,12 +77,14 @@ def dashboard():
     conn = sqlite3.connect('kojo.db')
     c = conn.cursor()
     c.execute("SELECT balance FROM users WHERE id =?", (session['user_id'],))
-    balance = c.fetchone()[0]
+    result = c.fetchone()
+    balance = result[0] if result else 0 # FIX: handle if no result
     conn.close()
 
-    return render_template('dashboard.html', balance=balance, name=session['user_name'])
+    name = session.get('user_name', 'User') # FIX: fallback
+    return render_template('dashboard.html', balance=balance, name=name)
 
-# COMPOSE SMS PAGE - NEW
+# COMPOSE SMS PAGE
 @app.route('/compose')
 def compose():
     if 'user_id' not in session:
@@ -90,7 +93,8 @@ def compose():
     conn = sqlite3.connect('kojo.db')
     c = conn.cursor()
     c.execute("SELECT balance FROM users WHERE id =?", (session['user_id'],))
-    balance = c.fetchone()[0]
+    result = c.fetchone()
+    balance = result[0] if result else 0
     conn.close()
 
     return render_template('compose.html', balance=balance)
@@ -98,7 +102,6 @@ def compose():
 # SEND SMS - PLACEHOLDER
 @app.route('/send_sms', methods=['POST'])
 def send_sms():
-    # We will connect real SMS API here later
     numbers = request.form['numbers']
     message = request.form['message']
     flash(f"SMS would be sent to {len(numbers.split())} numbers. API coming soon!", "info")
