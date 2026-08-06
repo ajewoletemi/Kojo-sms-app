@@ -5,13 +5,21 @@ if os.path.exists('kojo.db'):
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import sqlite3
 import requests
+import traceback 
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"
 
-# READ KEYS
-PAYSTACK_SECRET_KEY = os.environ.get("sk_test_1a831f22cc05a3c963f8b31fabc7d6c8e4c6abde")
+# THIS WILL PRINT THE REAL ERROR IN RENDER LOGS
+@app.errorhandler(500)
+def internal_error(error):
+    print("=== 500 ERROR ===")
+    print(traceback.format_exc())
+    return "SERVER ERROR. Check Render Logs for details.", 500
+
+# READ KEYS - REMEMBER TO PASTE YOUR REAL KEY HERE
+PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
 PAYSTACK_PUBLIC_KEY = "pk_test_fa36ffafee6ee98c67e8d37dd11094f31c4b2505" 
 
 def init_db():
@@ -145,5 +153,6 @@ def logout():
 def buy_number():
     return "Buy Number Page Coming Soon"
 
+app.config['PROPAGATE_EXCEPTIONS'] = True
 if __name__ == '__main__':
     app.run(debug=True)
