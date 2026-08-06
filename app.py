@@ -2,10 +2,10 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import traceback
 from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
+import requests
 
 app = Flask(__name__)
-
-app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"app = Flask(__name__)
 app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"
 
 # THIS WILL PRINT THE REAL ERROR IN RENDER LOGS
@@ -15,10 +15,11 @@ def internal_error(error):
     print(traceback.format_exc())
     return "SERVER ERROR. Check Render Logs for details.", 500
 
-# READ KEYS - REMEMBER TO PASTE YOUR REAL KEY HERE
-PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
-PAYSTACK_PUBLIC_KEY = "pk_test_fa36ffafee6ee98c67e8d37dd11094f31c4b2505" 
+# PAYSTACK KEYS
+PAYSTACK_SECRET_KEY = os.environ.get("sk_test_1a831f22cc05a3c963f8b31fabc7d6c8e4c6abde")
+PAYSTACK_PUBLIC_KEY = "pk_test_fa36ffafee6ee98c67e8d37dd11094f31c4b2505" # REPLACE WITH YOUR REAL KEY
 
+# DATABASE SETUP - SAFE VERSION FOR RENDER
 def init_db():
     conn = sqlite3.connect('kojo.db')
     c = conn.cursor()
@@ -35,123 +36,119 @@ def init_db():
     conn.commit()
     conn.close()
 
-def get_user_data(user_id):
-    conn = sqlite3.connect('kojo.db')
-    c = conn.cursor()
-    c.execute("SELECT id, name, email, balance FROM users WHERE id =?", (user_id,))
-    user = c.fetchone()
-    conn.close()
-    if user:
-        return {'id': user[0], 'name': user[1] or "User", 'email': user[2], 'balance': user[3] or 0.0}
-    else:
-        return None
+init_db()
+
+# LOGIN REQUIRED DECORATOR
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash("Please login first", "warning")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
-def index():
-    if 'user_id' in session: return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+def home():
+    return render_template('home.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        name, email, password = request.form['name'], request.form['email'], request.form['password']
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
         hashed_password = generate_password_hash(password)
         conn = sqlite3.connect('kojo.db')
         c = conn.cursor()
         try:
-            c.execute("INSERT INTO users (name, email, password) VALUES (?,?,?)", (name, email, hashed_password))
+            c.execute("INSERT INTO users (name, email, password, balance) VALUES (?,?,?,?)", (name, email, hashed_password, 0))
             conn.commit()
-            flash("Account created! Please login.", "success")
+            flash("Account created successfully! Please login.", "success")
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
-            flash("Email already exists!", "danger")
-        finally: conn.close()
+            flash("Email already exists", "danger")
+        finally:
+            conn.close()
     return render_template('signup.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email, password = request.form['email'], request.form['password']
+        email = request.form['email']
+        password = request.form['password']
         conn = sqlite3.connect('kojo.db')
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE email =?", (email,))
         user = c.fetchone()
         conn.close()
         if user and check_password_hash(user[3], password):
-            session['user_id'], session['user_name'], session['user_email'] = user[0], user[1] or "User", user[2]
+            session['user_id'] = user[0]
+            session['name'] = user[1]
+            flash("Login successful", "success")
             return redirect(url_for('dashboard'))
-        else: flash("Invalid email or password", "danger")
+        else:
+            flash("Invalid email or password", "danger")
     return render_template('login.html')
 
 @app.route('/dashboard')
+@login_required
 def dashboard():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    user = get_user_data(session['user_id'])
-    if not user:
-        session.clear()
-        flash("Account not found. Please signup again.", "danger")
-        return redirect(url_for('signup'))
-    session['user_email'] = user['email']
-    return render_template('dashboard.html', balance=user['balance'], name=user['name'])
-
-@app.route('/compose')
-def compose():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    user = get_user_data(session['user_id'])
-    if not user: return redirect(url_for('logout'))
-    return render_template('compose.html', balance=user['balance'])
-
-@app.route('/fund_wallet')
-def fund_wallet():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    user = get_user_data(session['user_id'])
-    if not user:
-        session.clear()
-        flash("Session expired. Please login again.", "danger")
-        return redirect(url_for('login'))
-    return render_template('fund_wallet.html', balance=user['balance'], email=user['email'], paystack_public_key=PAYSTACK_PUBLIC_KEY)
-
-@app.route('/verify_payment')
-def verify_payment():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    reference = request.args.get('reference')
-    if not PAYSTACK_SECRET_KEY:
-        flash("Payment Error: Secret Key not set on server.", "danger")
-        return redirect(url_for('fund_wallet'))
-    headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
-    url = f'https://api.paystack.co/transaction/verify/{reference}'
-    try:
-        response = requests.get(url, headers=headers)
-        data = response.json()
-        if data['status'] and data['data']['status'] == 'success':
-            amount = data['data']['amount'] / 100
-            user_id = session['user_id']
-            conn = sqlite3.connect('kojo.db')
-            c = conn.cursor()
-            c.execute("UPDATE users SET balance = balance +? WHERE id =?", (amount, user_id))
-            conn.commit()
-            conn.close()
-            flash(f"Wallet funded successfully with ₦{amount:,.2f}!", "success")
-        else:
-            flash("Payment verification failed.", "danger")
-    except Exception as e:
-        flash(f"An error occurred: {e}", "danger")
-    return redirect(url_for('dashboard'))
-
-@app.route('/send_sms', methods=['POST'])
-def send_sms():
-    flash("SMS API coming next! Let's connect Twilio.", "info")
-    return redirect(url_for('compose'))
+    conn = sqlite3.connect('kojo.db')
+    c = conn.cursor()
+    c.execute("SELECT balance FROM users WHERE id =?", (session['user_id'],))
+    balance = c.fetchone()[0]
+    conn.close()
+    return render_template('dashboard.html', name=session['name'], balance=balance)
 
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    flash("You have been logged out", "info")
+    return redirect(url_for('home'))
 
-@app.route('/buy_number')
-def buy_number():
-    return "Buy Number Page Coming Soon"
+@app.route('/fund_wallet', methods=['GET', 'POST'])
+@login_required
+def fund_wallet():
+    if request.method == 'POST':
+        amount = float(request.form['amount'])
+        email = request.form['email']
+        
+        headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
+        data = {'email': email, 'amount': int(amount * 100)} # Paystack uses kobo
+        
+        response = requests.post('https://api.paystack.co/transaction/initialize', headers=headers, json=data)
+        res_data = response.json()
+        
+        if res_data['status']:
+            authorization_url = res_data['data']['authorization_url']
+            return redirect(authorization_url)
+        else:
+            flash("Payment initialization failed", "danger")
+            
+    return render_template('fund_wallet.html', PAYSTACK_PUBLIC_KEY=PAYSTACK_PUBLIC_KEY)
 
-app.config['PROPAGATE_EXCEPTIONS'] = True
+@app.route('/verify_payment')
+@login_required
+def verify_payment():
+    reference = request.args.get('reference')
+    headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
+    response = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
+    res_data = response.json()
+    
+    if res_data['status'] and res_data['data']['status'] == 'success':
+        amount = res_data['data']['amount'] / 100 # Convert from kobo
+        conn = sqlite3.connect('kojo.db')
+        c = conn.cursor()
+        c.execute("UPDATE users SET balance = balance +? WHERE id =?", (amount, session['user_id']))
+        conn.commit()
+        conn.close()
+        flash(f"Wallet funded successfully with NGN {amount}", "success")
+        return redirect(url_for('dashboard'))
+    else:
+        flash("Payment verification failed", "danger")
+        return redirect(url_for('fund_wallet'))
+
 if __name__ == '__main__':
     app.run(debug=True)
