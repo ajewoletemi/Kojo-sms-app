@@ -1,6 +1,3 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-import sqlite3
-import requests
 import traceback 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -21,16 +18,18 @@ PAYSTACK_PUBLIC_KEY = "pk_test_fa36ffafee6ee98c67e8d37dd11094f31c4b2505"
 def init_db():
     conn = sqlite3.connect('kojo.db')
     c = conn.cursor()
+    # Create table with balance from the start
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY, name TEXT, email TEXT UNIQUE, password TEXT, balance REAL DEFAULT 0)''')
+    
+    # Try to add balance column if table already existed without it
     try:
         c.execute("ALTER TABLE users ADD COLUMN balance REAL DEFAULT 0")
     except sqlite3.OperationalError:
-        pass
+        pass # Column already exists, that's fine
+        
     conn.commit()
     conn.close()
-
-init_db()
 
 def get_user_data(user_id):
     conn = sqlite3.connect('kojo.db')
