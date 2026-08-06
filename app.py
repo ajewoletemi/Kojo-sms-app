@@ -1,7 +1,3 @@
-import os
-if os.path.exists('kojo.db'):
-    os.remove('kojo.db') # THIS DELETES OLD DB ON STARTUP
-
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import sqlite3
 import requests
