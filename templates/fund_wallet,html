@@ -7,23 +7,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { background: #000; color: #fff; font-family: 'Poppins'; padding: 20px; }
-      .container { max-width: 500px; margin: 50px auto; background: #121212; padding: 30px; border-radius: 15px; border: 1px solid #333; }
+       .container { max-width: 500px; margin: 50px auto; background: #121212; padding: 30px; border-radius: 15px; border: 1px solid #333; }
         h2 { color: #FFD700; text-align: center; }
         input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; margin: 10px 0; box-sizing: border-box; }
-      .kojo-btn { background: #FFD700; color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 16px; }
-      .back { color: #FFD700; text-decoration: none; }
+       .kojo-btn { background: #FFD700; color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 16px; }
+       .back { color: #FFD700; text-decoration: none; display:block; margin-bottom:15px; }
+       .balance { text-align:center; font-size:18px; margin-bottom:20px; }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="{{ url_for('dashboard') }}" class="back">← Back to Dashboard</a>
         <h2>Fund Your Wallet</h2>
-        <p>Current Balance: <b style="color:#00ff88;">₦{{ "%.2f"|format(balance) }}</b></p>
+        <p class="balance">Current Balance: <b style="color:#00ff88;">₦{{ "%.2f"|format(balance) }}</b></p>
         
         <form id="paymentForm">
+            <label>Your Email</label>
             <input type="email" id="email-address" value="{{ email }}" readonly />
-            <input type="number" id="amount" placeholder="Enter Amount e.g 1000" required />
-            <button type="submit" class="kojo-btn">Pay Now</button>
+            <label>Amount (₦)</label>
+            <input type="number" id="amount" placeholder="Enter Amount e.g 1000" min="100" required />
+            <button type="submit" class="kojo-btn">Pay Now with Paystack</button>
         </form>
     </div>
 
@@ -35,10 +38,10 @@
   function payWithPaystack(e) {
     e.preventDefault();
     let handler = PaystackPop.setup({
-      key: '{{ paystack_public_key }}', // Public key
+      key: '{{ paystack_public_key }}', // Public key from app.py
       email: document.getElementById("email-address").value,
-      amount: document.getElementById("amount").value * 100, // kobo
-      ref: ''+Math.floor((Math.random() * 1000000) + 1),
+      amount: document.getElementById("amount").value * 100, // convert to kobo
+      ref: 'kojo_'+Math.floor((Math.random() * 1000000000) + 1),
       callback: function(response){
           window.location = "/verify_payment?reference=" + response.reference;
       },
