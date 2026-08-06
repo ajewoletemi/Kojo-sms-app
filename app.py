@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "kojo-secret-123")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///kojo.db'
+app.config['BITCOIN_WALLET_ADDRESS'] = os.getenv("BITCOIN_WALLET_ADDRESS", "your_btc_address_here")
 db = SQLAlchemy(app)
 
 # INIT
@@ -22,6 +23,7 @@ client = Client(os.getenv("TWILIO_SID"), os.getenv("TWILIO_TOKEN"))
 # PRICING
 SMS_RATE_NAIRA = 200
 NUMBER_RATE_USD = 5
+USD_TO_NAIRA = 800 # Change this rate anytime
 
 # DATABASE MODELS
 class User(UserMixin, db.Model):
@@ -84,20 +86,59 @@ def logout():
 @app.route("/buy-number", methods=["POST"])
 @login_required
 def buy_number():
-    country = request.form.get("country") # US, NG, GB
-    if current_user.wallet_balance < (NUMBER_RATE_USD * 800): # rough $1 = ₦800
-        return "Insufficient balance", 400
+    country = request.form.get("country")
+    cost_naira = NUMBER_RATE_USD * USD_TO_NAIRA
+    if current_user.wallet_balance < cost_naira:
+        flash("Insufficient wallet balance")
+        return redirect(url_for("dashboard"))
 
-    # BUY FROM TWILIO
-    available = client.available_phone_numbers(country).local.list(limit=1)
-    if not available: return "No numbers available", 400
-    purchased = client.incoming_phone_numbers.create(phone_number=available[0].phone_number)
+    try:
+        available = client.available_phone_numbers(country).local.list(limit=1)
+        if not available:
+            flash("No numbers available for this country")
+            return redirect(url_for("dashboard"))
+        purchased = client.incoming_phone_numbers.create(phone_number=available[0].phone_number)
 
-    # SAVE & DEDUCT
-    new_num = TwilioNumber(user_id=current_user.id, phone_number=purchased.phone_number, country=country)
-    db.session.add(new_num)
-    current_user.wallet_balance -= (NUMBER_RATE_USD * 800)
-    db.session.commit()
+        new_num = TwilioNumber(user_id=current_user.id, phone_number=purchased.phone_number, country=country)
+        db.session.add(new_num)
+        current_user.wallet_balance -= cost_naira
+        db.session.commit()
+        flash(f"Number {purchased.phone_number} purchased successfully!")
+    except Exception as e:
+        flash(f"Error buying number: {e}")
+    return redirect(url_for("dashboard"))
+
+@app.route("/paystack-init", methods=["POST"])
+@login_required
+def paystack_init():
+    amount = int(request.form.get("amount")) * 100 # Paystack uses kobo
+    response = paystack.transaction.initialize(
+        email=current_user.email,
+        amount=amount,
+        callback_url=url_for('paystack_verify', _external=True)
+    )
+    return redirect(response['data']['authorization_url'])
+
+@app.route("/paystack-verify")
+@login_required
+def paystack_verify():
+    reference = request.args.get('reference')
+    response = paystack.transaction.verify(reference)
+    if response['data']['status'] == 'success':
+        amount = response['data']['amount'] / 100
+        current_user.wallet_balance += amount
+        db.session.commit()
+        flash(f"Wallet funded with ₦{amount}")
+    else:
+        flash("Payment failed")
+    return redirect(url_for("dashboard"))
+
+@app.route("/btc-fund", methods=["POST"])
+@login_required
+def btc_fund():
+    amount = request.form.get("amount")
+    tx_hash = request.form.get("tx_hash")
+    flash(f"BTC proof submitted: {tx_hash}. Admin will credit you soon.")
     return redirect(url_for("dashboard"))
 
 @app.route("/send-sms", methods=["POST"])
@@ -109,15 +150,13 @@ def send_sms():
     cost = len(numbers) * SMS_RATE_NAIRA
 
     if current_user.wallet_balance < cost:
-        return jsonify({"error": "Low wallet balance"}), 400
+        return jsonify({"error": "Low wallet balance. Fund wallet first."}), 400
 
-    # DEDUCT FIRST
-    current_user.wallet_balance -= cost
-    db.session.commit()
-
-    # SEND FROM USER'S FIRST NUMBER
     user_num = TwilioNumber.query.filter_by(user_id=current_user.id).first()
     if not user_num: return jsonify({"error": "Buy a number first"}), 400
+
+    current_user.wallet_balance -= cost
+    db.session.commit()
 
     for num in numbers:
         client.messages.create(to=num.strip(), from_=user_num.phone_number, body=message)
