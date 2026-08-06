@@ -3,92 +3,195 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOJO SMS</title>
+<title>KOJO SMS Dashboard</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
     
     body {
-        background: #000000; /* Deep Black */
+        background: #000000;
         color: #fff;
         display: flex;
-        justify-content: center;
-        align-items: center;
         min-height: 100vh;
-        padding: 20px;
     }
     
-    .container {
+    /* SIDEBAR */
+    .sidebar {
+        width: 240px;
         background: #0A1128; /* Dark Blue */
-        padding: 40px 30px;
-        border-radius: 16px;
-        box-shadow: 0 0 25px rgba(255, 215, 0, 0.2); /* Yellow glow */
-        width: 100%;
-        max-width: 420px;
+        padding: 20px 0;
+        border-right: 1px solid #1C2E4A;
+    }
+    
+    .logo {
+        color: #FFD700;
+        font-size: 24px;
+        font-weight: bold;
+        padding: 0 20px 30px;
+        letter-spacing: 2px;
+    }
+    
+    .menu-item {
+        padding: 12px 20px;
+        color: #A0AEC0;
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .menu-item:hover, .menu-item.active {
+        background: #1C2E4A;
+        color: #FFD700;
+        border-left: 3px solid #FFD700;
+    }
+    
+    /* MAIN CONTENT */
+    .main {
+        flex: 1;
+        padding: 30px;
+    }
+    
+    .topbar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 30px;
+    }
+    
+    .balance {
+        background: #0A1128;
+        padding: 10px 20px;
+        border-radius: 8px;
         border: 1px solid #1C2E4A;
     }
     
+    .balance span { color: #A0AEC0; }
+    .balance .amount { color: #4ADE80; font-weight: bold; font-size: 18px; }
+    
     h1 {
-        text-align: center;
-        margin-bottom: 25px;
-        color: #FFD700; /* Bright Yellow */
+        color: #FFD700;
+        margin-bottom: 8px;
         font-size: 28px;
-        letter-spacing: 1px;
     }
     
-    input, textarea {
+    .subtitle {
+        color: #A0AEC0;
+        margin-bottom: 30px;
+    }
+    
+    .card {
+        background: #0A1128;
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #1C2E4A;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+    }
+    
+    .card h2 {
+        color: #FFD700;
+        margin-bottom: 20px;
+        font-size: 20px;
+    }
+    
+    label {
+        display: block;
+        color: #A0AEC0;
+        margin-bottom: 8px;
+        margin-top: 15px;
+        font-size: 14px;
+    }
+    
+    textarea, input {
         width: 100%;
-        padding: 14px;
-        margin-bottom: 18px;
+        padding: 12px;
         background: #000;
         border: 1px solid #1C2E4A;
         border-radius: 8px;
         color: #fff;
-        font-size: 15px;
+        font-size: 14px;
         outline: none;
-        transition: 0.3s;
     }
     
-    input:focus, textarea:focus {
+    textarea:focus, input:focus {
         border-color: #FFD700;
-        box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
     }
     
-    button {
-        width: 100%;
-        padding: 15px;
-        background: #FFD700; /* Bright Yellow */
+    .count {
+        color: #A0AEC0;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+    
+    .note {
+        color: #A0AEC0;
+        font-size: 12px;
+        margin-top: 20px;
+    }
+    
+    .btn {
+        margin-top: 20px;
+        padding: 12px 30px;
+        background: #FFD700;
         color: #000;
-        font-weight: bold;
-        font-size: 16px;
         border: none;
         border-radius: 8px;
+        font-weight: bold;
+        font-size: 15px;
         cursor: pointer;
         transition: 0.3s;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
     }
     
-    button:hover {
+    .btn:hover {
         background: #FFC300;
         transform: translateY(-2px);
-        box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
-    }
-    
-    .msg {
-        text-align: center;
-        margin-top: 15px;
-        font-size: 14px;
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
     }
 </style>
 </head>
 <body>
-    <div class="container">
-        <h1>KOJO SMS</h1>
-        <form method="POST" action="/send">
-            <input type="text" name="to" placeholder="+234 XXX XXX XXXX" required>
-            <textarea name="message" rows="4" placeholder="Type your message..." required></textarea>
-            <button type="submit">SEND SMS</button>
-        </form>
-        {% if msg %}<p class="msg">{{ msg }}</p>{% endif %}
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="logo">KOJO</div>
+        <div class="menu-item active">📊 Overview</div>
+        <div class="menu-item">➤ Send</div>
+        <div class="menu-item">📝 Logs</div>
+        <div class="menu-item">💰 Deposit</div>
+        <div class="menu-item">🔑 License</div>
+        <div class="menu-item">💳 Pricing</div>
+        <div class="menu-item">📦 Orders</div>
+    </div>
+    
+    <!-- MAIN -->
+    <div class="main">
+        <div class="topbar">
+            <div class="balance">
+                <span>BALANCE</span> <span class="amount">$0.00</span>
+            </div>
+        </div>
+        
+        <h1>➤ Message Compose</h1>
+        <p class="subtitle">Compose and send supported messages.</p>
+        
+        <div class="card">
+            <h2>Compose SMS</h2>
+            
+            <form method="POST" action="/send">
+                <label>Recipient numbers</label>
+                <textarea name="to" rows="6" placeholder="+2348012345678
++2348098765432
++23470..."></textarea>
+                <div class="count">Paste multiple numbers, one per line</div>
+                
+                <label>Message</label>
+                <textarea name="message" rows="4" placeholder="Type your message here..."></textarea>
+                
+                <p class="note">Note: For best delivery, avoid spam words and links</p>
+                
+                <button type="submit" class="btn">Send</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>
