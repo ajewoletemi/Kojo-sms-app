@@ -1,63 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KOJO - Fund Wallet</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { background: #000; color: #fff; font-family: 'Poppins'; padding: 20px; background: #121212; }
-        .container { max-width: 500px; margin: 50px auto; background: #1a1a1a; padding: 30px; border-radius: 10px; border: 1px solid #333; }
-        h2 { color: #FFD700; text-align: center; }
-        .balance { text-align:center; font-size:18px; margin-bottom: 20px; color: #FFD700; }
-        input { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 5px; margin-bottom: 15px; box-sizing: border-box; }
-        .kojo-btn { background: #FFD700; color: #000; border: none; padding: 14px; width: 100%; border-radius: 5px; font-weight: 700; cursor: pointer; font-size: 16px; }
-        .kojo-btn:hover { background: #e6c200; }
-        .back { color: #FFD700; text-decoration: none; display:block; margin-top: 15px; text-align: center; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>Fund Wallet</h2>
-        <p class="balance">Current Balance: ₦{{ "%.2f"|format(balance) }}</p>
-        
-        <label>Amount to Fund (₦)</label>
-        <input type="number" id="amount" placeholder="Enter Amount e.g. 1000" min="100">
-        
-        <button class="kojo-btn" onclick="payWithPaystack()">Fund Wallet</button>
-        
-        <a href="/dashboard" class="back">← Back to Dashboard</a>
-    </div>
-
-    <script src="https://js.paystack.co/v1/inline.js"></script>
-    <script>
-        // THESE 3 LINES ARE THE MOST IMPORTANT
-        const paystackPublicKey = "{{ paystack_public_key }}"; 
-        const userEmail = "{{ email }}";
-        
-        function payWithPaystack() {
-            const amount = document.getElementById('amount').value;
-            if (!amount || amount < 100) {
-                alert("Please enter an amount of at least ₦100");
-                return;
-            }
-
-            let handler = PaystackPop.setup({
-                key: paystackPublicKey, // THIS USES THE KEY FROM FLASK
-                email: userEmail,       // THIS USES YOUR EMAIL FROM FLASK
-                amount: amount * 100, // Paystack is in kobo
-                currency: "NGN",
-                ref: ''+Math.floor((Math.random() * 1000000) + 1),
-                callback: function(response){
-                    // Redirect to our backend to verify
-                    window.location = "/verify_payment?reference=" + response.reference;
-                },
-                onClose: function(){
-                    alert('Transaction was cancelled');
-                }
-            });
-            handler.openIframe();
-        }
-    </script>
-</body>
-</html>
+<!DOCTYPE html><html><head><title>Fund Wallet - KOJO</title></head><body style="padding:30px;">
+<h2>Fund Your Wallet</h2>
+<form method="POST">
+<input type="email" name="email" placeholder="Email for Paystack" required style="padding:8px; width:300px;"><br><br>
+<input type="number" name="amount" placeholder="Amount NGN" required style="padding:8px; width:300px;"><br><br>
+<button style="padding:10px 20px;">Pay with Paystack</button></form>
+<a href="/dashboard">Back to Dashboard</a></body></html>
