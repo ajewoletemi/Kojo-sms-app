@@ -4,6 +4,7 @@ import traceback
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+
 app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"app = Flask(__name__)
 app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"
 
