@@ -4,17 +4,18 @@ import traceback
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import requests
+from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev_key_change_this")
 
 @app.errorhandler(500)
 def internal_error(error):
     print("=== 500 ERROR ===")
     print(traceback.format_exc())
-    return "SERVER ERROR. Check Render Logs for details.", 500
+    return "SERVER ERROR. Check Render Logs", 500
 
-# SAFE: KEYS COME FROM RENDER ENVIRONMENT VARIABLES
+# SAFE: KEYS COME FROM RENDER ONLY
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
 PAYSTACK_PUBLIC_KEY = os.environ.get("PAYSTACK_PUBLIC_KEY")
 
@@ -33,7 +34,6 @@ def init_db():
 init_db()
 
 def login_required(f):
-    from functools import wraps
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -44,7 +44,7 @@ def login_required(f):
 
 @app.route('/')
 def home():
-    return render_template('home.html') # Make sure templates/home.html exists
+    return render_template('home.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -138,10 +138,5 @@ def verify_payment():
         flash("Payment verification failed", "danger")
         return redirect(url_for('fund_wallet'))
 
-@app.route('/compose')
-@login_required
-def compose():
-    return "Compose SMS page - Coming Soon"
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
