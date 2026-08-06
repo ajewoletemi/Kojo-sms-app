@@ -1,29 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KOJO - Receive SMS</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-</head>
-<body style="background: #f4f7f9;">
-    <div class="dashboard-box">
-        <h2>KOJO Inbox</h2>
-        <p>Number: <b>{{ phone_number }}</b></p>
-        
-        <div class="card">
-            <h3>Latest SMS</h3>
-            {% if sms %}
-                <p><b>From:</b> {{ sms.sender }}</p>
-                <p><b>Message:</b> {{ sms.message }}</p>
-                <p><small>{{ sms.time }}</small></p>
-            {% else %}
-                <p>Waiting for SMS...</p>
-            {% endif %}
-        </div>
-        
-        <a href="{{ url_for('dashboard') }}"><button>Back to Dashboard</button></a>
-    </div>
+<html>
+<head><title>KOJO SMS</title></head>
+<body style="font-family: Arial; text-align: center; padding: 50px;">
+    <h1>Welcome to KOJO SMS</h1>
+    <p>Buy virtual numbers and receive SMS online</p>
+    <a href="/signup" style="padding:10px 20px; background:blue; color:white; text-decoration:none;">Sign Up</a>
+    <a href="/login" style="padding:10px 20px; background:green; color:white; text-decoration:none;">Login</a>
 </body>
 </html>
