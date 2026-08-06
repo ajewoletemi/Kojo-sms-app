@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"
 
 # PUT YOUR REAL PAYSTACK KEYS HERE
-PAYSTACK_SECRET_KEY = "sk_test_135f3ee265b4402656505b21a51c33b39596a1d0" 
+PAYSTACK_SECRET_KEY = "sk_test_1a831f22cc05a3c963f8b31fabc7d6c8e4c6abde" 
 PAYSTACK_PUBLIC_KEY = "pk_test_fa36ffafee6ee98c67e8d37dd11094f31c4b2505" 
 
 def init_db():
