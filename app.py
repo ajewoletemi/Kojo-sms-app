@@ -19,7 +19,6 @@ def init_db():
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY, name TEXT, email TEXT UNIQUE, password TEXT, balance REAL DEFAULT 0)''')
-    # Migration: add balance column if it doesn't exist
     try:
         c.execute("ALTER TABLE users ADD COLUMN balance REAL DEFAULT 0")
     except sqlite3.OperationalError:
@@ -30,13 +29,11 @@ def init_db():
 init_db()
 
 def get_user_data(user_id):
-    """SAFE function to get user data. Returns default values if user not found"""
     conn = sqlite3.connect('kojo.db')
     c = conn.cursor()
     c.execute("SELECT id, name, email, balance FROM users WHERE id =?", (user_id,))
     user = c.fetchone()
     conn.close()
-    
     if user:
         return {'id': user[0], 'name': user[1] or "User", 'email': user[2], 'balance': user[3] or 0.0}
     else:
@@ -82,13 +79,11 @@ def login():
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session: return redirect(url_for('login'))
-    
     user = get_user_data(session['user_id'])
     if not user:
         session.clear()
         flash("Account not found. Please signup again.", "danger")
         return redirect(url_for('signup'))
-        
     session['user_email'] = user['email']
     return render_template('dashboard.html', balance=user['balance'], name=user['name'])
 
@@ -113,18 +108,14 @@ def fund_wallet():
 def verify_payment():
     if 'user_id' not in session: return redirect(url_for('login'))
     reference = request.args.get('reference')
-    
     if not PAYSTACK_SECRET_KEY:
         flash("Payment Error: Secret Key not set on server.", "danger")
         return redirect(url_for('fund_wallet'))
-
     headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
     url = f'https://api.paystack.co/transaction/verify/{reference}'
-    
     try:
         response = requests.get(url, headers=headers)
         data = response.json()
-
         if data['status'] and data['data']['status'] == 'success':
             amount = data['data']['amount'] / 100
             user_id = session['user_id']
@@ -138,7 +129,6 @@ def verify_payment():
             flash("Payment verification failed.", "danger")
     except Exception as e:
         flash(f"An error occurred: {e}", "danger")
-        
     return redirect(url_for('dashboard'))
 
 @app.route('/send_sms', methods=['POST'])
