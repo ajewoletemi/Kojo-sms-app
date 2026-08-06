@@ -7,17 +7,16 @@ import requests
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev_key_change_this")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+
+PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
+PAYSTACK_PUBLIC_KEY = os.environ.get("PAYSTACK_PUBLIC_KEY")
 
 @app.errorhandler(500)
 def internal_error(error):
     print("=== 500 ERROR ===")
     print(traceback.format_exc())
     return "SERVER ERROR. Check Render Logs", 500
-
-# SAFE: KEYS COME FROM RENDER ONLY
-PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
-PAYSTACK_PUBLIC_KEY = os.environ.get("PAYSTACK_PUBLIC_KEY")
 
 def init_db():
     conn = sqlite3.connect('kojo.db')
@@ -58,7 +57,7 @@ def signup():
         try:
             c.execute("INSERT INTO users (name, email, password, balance) VALUES (?,?,?,?)", (name, email, hashed_password, 0))
             conn.commit()
-            flash("Account created successfully! Please login.", "success")
+            flash("Account created! Please login.", "success")
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
             flash("Email already exists", "danger")
@@ -99,7 +98,6 @@ def dashboard():
 @app.route('/logout')
 def logout():
     session.clear()
-    flash("You have been logged out", "info")
     return redirect(url_for('home'))
 
 @app.route('/fund_wallet', methods=['GET', 'POST'])
@@ -109,13 +107,13 @@ def fund_wallet():
         amount = float(request.form['amount'])
         email = request.form['email']
         headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
-        data = {'email': email, 'amount': int(amount * 100)}
+        data = {'email': email, 'amount': int(amount * 100), 'callback_url': url_for('verify_payment', _external=True)}
         response = requests.post('https://api.paystack.co/transaction/initialize', headers=headers, json=data)
         res_data = response.json()
         if res_data['status']:
             return redirect(res_data['data']['authorization_url'])
         else:
-            flash("Payment initialization failed", "danger")
+            flash("Payment failed", "danger")
     return render_template('fund_wallet.html', PAYSTACK_PUBLIC_KEY=PAYSTACK_PUBLIC_KEY)
 
 @app.route('/verify_payment')
@@ -132,7 +130,7 @@ def verify_payment():
         c.execute("UPDATE users SET balance = balance +? WHERE id =?", (amount, session['user_id']))
         conn.commit()
         conn.close()
-        flash(f"Wallet funded successfully with NGN {amount}", "success")
+        flash(f"Wallet funded with NGN {amount}", "success")
         return redirect(url_for('dashboard'))
     else:
         flash("Payment verification failed", "danger")
