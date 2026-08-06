@@ -1,22 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KOJO Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div class="login-box">
-        <h2>KOJO SMS</h2>
-        <p>Login to your account</p>
-        <form method="POST">
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <p style="margin-top:15px;">No account? <a href="{{ url_for('signup') }}">Signup</a></p>
-    </div>
-</body>
-</html>
+<!DOCTYPE html><html><head><title>Login - KOJO</title></head><body style="padding:30px;">
+<h2>Login to KOJO</h2>
+{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<p style="color:red;">{{ message }}</p>{% endfor %}{% endwith %}
+<form method="POST">
+<input type="email" name="email" placeholder="Email" required style="padding:8px; width:300px;"><br><br>
+<input type="password" name="password" placeholder="Password" required style="padding:8px; width:300px;"><br><br>
+<button style="padding:10px 20px;">Login</button></form>
+<p>Don't have account? <a href="/signup">Sign Up</a></p></body></html>
