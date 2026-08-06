@@ -8,8 +8,8 @@ app = Flask(__name__)
 app.secret_key = "kojo_secret_key_123_CHANGE_THIS_LATER"
 
 # READ KEYS
-PAYSTACK_SECRET_KEY = os.environ.get("sk_test_1a831f22cc05a3c963f8b31fabc7d6c8e4c6abde")
-PAYSTACK_PUBLIC_KEY = "pk_test_fa36ffafee6ee98c67e8d37dd11094f31c4b2505" 
+PAYSTACK_SECRET_KEY = os.environ.get("pk_test_fa36ffafee6ee98c67e8d37dd11094f31c4b2505")
+PAYSTACK_PUBLIC_KEY = "sk_test_1a831f22cc05a3c963f8b31fabc7d6c8e4c6abde" 
 
 def init_db():
     conn = sqlite3.connect('kojo.db')
@@ -100,7 +100,10 @@ def compose():
 def fund_wallet():
     if 'user_id' not in session: return redirect(url_for('login'))
     user = get_user_data(session['user_id'])
-    if not user: return redirect(url_for('logout')) # safety check
+    if not user: # THIS IS THE NEW SAFETY CHECK
+        session.clear()
+        flash("Session expired. Please login again.", "danger")
+        return redirect(url_for('login'))
     return render_template('fund_wallet.html', balance=user['balance'], email=user['email'], paystack_public_key=PAYSTACK_PUBLIC_KEY)
 
 @app.route('/verify_payment')
