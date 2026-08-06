@@ -14,8 +14,9 @@ def internal_error(error):
     print(traceback.format_exc())
     return "SERVER ERROR. Check Render Logs for details.", 500
 
-PAYSTACK_SECRET_KEY = os.environ.get("sk_test_1a831f22cc05a3c963f8b31fabc7d6c8e4c6abde")
-PAYSTACK_PUBLIC_KEY = "pk_test_f36ffafee66e98c67e8d37dd1109451c4b2505"
+# SAFE: KEYS COME FROM RENDER ENVIRONMENT VARIABLES
+PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
+PAYSTACK_PUBLIC_KEY = os.environ.get("PAYSTACK_PUBLIC_KEY")
 
 def init_db():
     conn = sqlite3.connect('kojo.db')
@@ -43,7 +44,7 @@ def login_required(f):
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    return render_template('home.html') # Make sure templates/home.html exists
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -137,7 +138,6 @@ def verify_payment():
         flash("Payment verification failed", "danger")
         return redirect(url_for('fund_wallet'))
 
-# NEW ROUTE TO FIX THE ERROR
 @app.route('/compose')
 @login_required
 def compose():
