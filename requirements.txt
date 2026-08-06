@@ -1,3 +1,7 @@
 Flask
-gunicorn
 twilio
+gunicorn
+flask-login
+flask-sqlalchemy
+paystackapi
+requests
