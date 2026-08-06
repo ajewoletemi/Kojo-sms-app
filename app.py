@@ -136,5 +136,17 @@ def verify_payment():
         flash("Payment verification failed", "danger")
         return redirect(url_for('fund_wallet'))
 
+@app.route('/compose')
+@login_required
+def compose():
+    return render_template('compose.html')
+
+@app.route('/send_sms', methods=['POST'])
+@login_required
+def send_sms():
+    # SMS API integration will go here later
+    flash("SMS sent successfully! - Demo mode", "success")
+    return redirect(url_for('compose'))
+
 if __name__ == '__main__':
     app.run(debug=False)
