@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My SMS Panel - Kojo SMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0a0a0a; color: #e0e0e0; padding: 30px; }
+      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 20px; }
+        h1 { color: #FFD700; letter-spacing: 1px; }
+      .stats { display: flex; gap: 20px; margin-bottom: 30px; }
+      .stat-card { background: #1a1a1a; border: 1px solid #333; padding: 20px; border-radius: 10px; flex: 1; text-align: center; }
+      .stat-card h3 { color: #888; font-size: 14px; margin-bottom: 10px; }
+      .stat-card p { color: #FFD700; font-size: 28px; font-weight: bold; }
+      .card { background: #1a1a1a; border: 1px solid #333; padding: 25px; border-radius: 10px; margin-bottom: 20px; }
+      .card h2 { color: #FFD700; margin-bottom: 15px; }
+      .btn { padding: 12px 25px; background: #FFD700; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+      .btn:hover { box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+      .btn-logout { padding: 10px 20px; background: #FFD700; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; }
+        textarea, input { width:100%; background:#222; border:1px solid #444; color:#fff; padding:10px; border-radius:5px; margin:10px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KOJO SMS - USER PANEL</h1>
+        <div>
+            Welcome, <span style="color:#FFD700">{{ user_name }}</span>!
+            <a href="{{ url_for('logout') }}" class="btn-logout">LOGOUT</a>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <h3>WALLET BALANCE</h3>
+            <p>$0.00</p>
+        </div>
+        <div class="stat-card">
+            <h3>YOUR NUMBERS</h3>
+            <p>0</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>1. BUY PHONE NUMBER</h2>
+        <p>Buy a US virtual number to send and receive SMS</p>
+        <button class="btn">BUY US NUMBER - $2.00</button>
+    </div>
+
+    <div class="card">
+        <h2>2. SEND SMS</h2>
+        <input type="text" placeholder="Recipient Number: +1234567890">
+        <textarea placeholder="Type your message here..."></textarea>
+        <button class="btn">SEND SMS</button>
+    </div>
+</body>
+</html>
