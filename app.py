@@ -1,117 +1,117 @@
 from flask import Flask, render_template, request, redirect, session, flash
+from flask_sqlalchemy import SQLAlchemy
+import os
 
 app = Flask(__name__)
-app.secret_key = "kojo_secret_key_123_change_this_later"
+app.secret_key = "kojo_secret_key_123_change_this"
 
-# SIMPLE USER STORAGE - just for demo. We will use database later
-users = {} 
+# USE ENV VAR FROM RENDER - Don't hardcode password
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-# ROUTE 1: WELCOME PAGE
+# USER MODEL - matches what we made in Supabase
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+    wallet = db.Column(db.Float, default=0.0)
+    role = db.Column(db.String(20), default='user')
+
+# CREATE TABLES IF NOT EXISTS
+with app.app_context():
+    db.create_all()
+
+# 1. HOME
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# ROUTE 2: REGISTER
+# 2. REGISTER
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-
-        if username in users:
+        
+        if User.query.filter_by(username=username).first():
             flash("Username already exists!", "danger")
             return redirect('/register')
-
-        # Save user
-        users[username] = {'email': email, 'password': password, 'wallet': 0.0}
+            
+        new_user = User(username=username, email=email, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        
         session['user'] = username
-        session['wallet'] = 0.0
-        flash("Account created successfully!", "success")
+        session['role'] = 'user'
+        flash("Account created!", "success")
         return redirect('/user_app')
     return render_template('register.html')
 
-# ROUTE 3: LOGIN
+# 3. LOGIN
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        user = User.query.filter_by(username=username, password=password).first()
         
-        if username in users and users[username]['password'] == password:
-            session['user'] = username
-            session['wallet'] = users[username]['wallet']
-            flash("Logged in successfully!", "success")
+        if user:
+            session['user'] = user.username
+            session['role'] = user.role
+            flash("Logged in!", "success")
+            if user.role == 'admin':
+                return redirect('/admin')
             return redirect('/user_app')
         else:
             flash("Invalid username or password", "danger")
     return render_template('login.html')
 
-# ROUTE 4: DASHBOARD
+# 4. USER DASHBOARD
 @app.route('/user_app')
 def user_app():
-    if 'user' not in session:
-        flash("Please login first", "warning")
-        return redirect('/login')
-    username = session['user']
-    wallet_balance = users[username]['wallet']
-    return render_template('user_app.html', wallet=wallet_balance)
+    if 'user' not in session: return redirect('/login')
+    user = User.query.filter_by(username=session['user']).first()
+    return render_template('user_app.html', wallet=user.wallet)
 
-# ROUTE 5: SEND SMS
-@app.route('/send_sms', methods=['GET', 'POST'])
-def send_sms():
-    if 'user' not in session:
-        flash("Please login first", "warning")
-        return redirect('/login')
-    username = session['user']
-    wallet_balance = users[username]['wallet']
+# 5. ADMIN PANEL
+@app.route('/admin')
+def admin():
+    if 'role' not in session or session['role'] != 'admin': return redirect('/')
+    users = User.query.all()
+    return render_template('admin.html', users=users)
 
-    if request.method == 'POST':
-        numbers = request.form['numbers'].splitlines()
-        numbers = [n.strip() for n in numbers if n.strip()]
-        flash(f"SMS Queued to {len(numbers)} numbers. Demo mode.", "success")
-        return redirect('/user_app')
-
-    return render_template('send_sms.html', wallet=wallet_balance)
-
-# ROUTE 6: FUND WITH CARD
+# 6. FUND WALLET
 @app.route('/fund_wallet', methods=['GET', 'POST'])
 def fund_wallet():
-    if 'user' not in session:
-        return redirect('/login')
+    if 'user' not in session: return redirect('/login')
+    user = User.query.filter_by(username=session['user']).first()
     
-    username = session['user']
-    wallet_balance = users[username]['wallet']
-
     if request.method == 'POST':
-        if 'amount' in request.form:
-            add_amount = float(request.form['amount'])
-        elif 'custom_amount' in request.form and request.form['custom_amount']:
-            add_amount = float(request.form['custom_amount'])
-        else:
-            add_amount = 0
-
-        users[username]['wallet'] += add_amount
-        session['wallet'] = users[username]['wallet']
-        flash(f"${add_amount} added to wallet successfully!", "success")
+        add = float(request.form.get('amount', 0)) or float(request.form.get('custom_amount', 0))
+        user.wallet += add
+        db.session.commit()
+        flash(f"${add} added", "success")
         return redirect('/fund_wallet')
+    return render_template('fund_wallet.html', wallet=user.wallet)
 
-    return render_template('fund_wallet.html', wallet=wallet_balance)
+# 7. SEND SMS
+@app.route('/send_sms', methods=['GET', 'POST'])
+def send_sms():
+    if 'user' not in session: return redirect('/login')
+    user = User.query.filter_by(username=session['user']).first()
+    return render_template('send_sms.html', wallet=user.wallet)
 
-# ROUTE 7: FUND WITH BTC
+# 8. FUND BTC
 @app.route('/fund_btc')
 def fund_btc():
-    if 'user' not in session:
-        return redirect('/login')
+    if 'user' not in session: return redirect('/login')
     return render_template('fund_btc.html')
 
-# ROUTE 8: LOGOUT
+# 9. LOGOUT
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
-    session.pop('wallet', None)
-    flash("Logged out", "info")
+    session.clear()
     return redirect('/')
-
-if __name__ == '__main__':
-    app.run(debug=True)
