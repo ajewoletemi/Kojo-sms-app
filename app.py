@@ -1,102 +1,79 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-import requests
 import os
-os.environ["DATABASE_URL"] = "postgresql://postgres.kvbbegaabylyzfhvqznl:Mikkymouses1!@aws-0-eu-central-1.pooler.supabase.com:6543/postgres"
-
-import uuid
-from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, flash
 import psycopg2
-from psycopg2 import pool
-from psycopg2.extras import RealDictCursor
+from psycopg2.pool import SimpleConnectionPool
 
 app = Flask(__name__)
-app.secret_key = 'kojo_secret_key_123_change_this_to_something_random'
+app.secret_key = "supersecretkey"  # change this later
 
-# Create connection pool for Supabase
-db_pool = psycopg2.pool.SimpleConnectionPool(
-    1, 20,
-    os.environ["DATABASE_URL"]
-)
+# --- DATABASE CONNECTION ---
+DATABASE_URL = os.environ.get("DATABASE_URL")
+# IMPORTANT: Use pooler with pgbouncer=true
+if DATABASE_URL and "pooler.supabase.com" in DATABASE_URL:
+    if "?" not in DATABASE_URL:
+        DATABASE_URL += "?pgbouncer=true&connection_limit=1"
+    elif "pgbouncer" not in DATABASE_URL:
+        DATABASE_URL += "&pgbouncer=true&connection_limit=1"
+
+pool = SimpleConnectionPool(1, 10, DATABASE_URL)
 
 def get_db():
-    """Get database connection from pool"""
-    return db_pool.getconn()
+    return pool.getconn()
 
 def release_db(conn):
-    """Release database connection back to pool"""
-    db_pool.putconn(conn)
+    pool.putconn(conn)
 
-def init_db():
-    """Auto create tables in Supabase if they don't exist"""
-    conn = get_db()
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(100),
-            email VARCHAR(100) UNIQUE,
-            password VARCHAR(200),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-    release_db(conn)
-    print("✅ Database tables checked/created")
+# --- ROUTES ---
 
-# Run init_db once when app starts
-init_db()
-
-PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
-NOWPAYMENTS_API_KEY = os.environ.get('NOWPAYMENTS_API_KEY')
-NGN_TO_USD_RATE = 1500 # ₦15,000 = $10 so $1 = ₦1500
-
-# ===== YOUR ROUTES =====
 @app.route('/')
 def home():
     conn = get_db()
-    c = conn.cursor(cursor_factory=RealDictCursor)
-    c.execute("SELECT * FROM users ORDER BY id DESC")
+    c = conn.cursor()
+    c.execute("SELECT id, name, email, created_at FROM users ORDER BY id DESC")
     users = c.fetchall()
     release_db(conn)
     return render_template('index.html', users=users)
 
 @app.route('/add_user', methods=['POST'])
 def add_user():
-    name = request.form['name']
-    email = request.form['email']
-    
-    conn = get_db()
-    c = conn.cursor()
     try:
+        name = request.form.get('name')
+        email = request.form.get('email')
+        
+        if not name or not email:
+            flash("Name and Email are required!", "danger")
+            return redirect(url_for('home'))
+
+        conn = get_db()
+        c = conn.cursor()
         c.execute("INSERT INTO users (name, email) VALUES (%s, %s)", (name, email))
         conn.commit()
-        flash("User added successfully!", "success")
-    except psycopg2.IntegrityError:
-        conn.rollback()
-        flash("Email already exists!", "danger")
-    finally:
         release_db(conn)
+        flash("User added successfully!", "success")
+    except Exception as e:
+        flash(f"Error: {str(e)}", "danger")
+        print(f"DB ERROR: {e}") # Check Render Logs for this
     
     return redirect(url_for('home'))
 
 @app.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
-    conn = get_db()
-    c = conn.cursor()
-    c.execute("DELETE FROM users WHERE id = %s", (user_id,))
-    conn.commit()
-    release_db(conn)
-    flash("User deleted!", "info")
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        conn.commit()
+        release_db(conn)
+        flash("User deleted!", "success")
+    except Exception as e:
+        flash(f"Error: {str(e)}", "danger")
+    
     return redirect(url_for('home'))
 
-# ===== LOGIN DECORATOR EXAMPLE =====
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
+# Optional: if you want /signup to work
+@app.route('/signup')
+def signup():
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True)
