@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 60vh;">
+  <div class="col-md-5">
+    <div class="card shadow-lg">
+      <div class="card-body p-4">
+        <h2 class="text-center kojo-yellow mb-3">Create Account</h2>
+        <p class="text-center text-muted">Join Kojo SMS today</p>
+        <form method="post">
+          <div class="mb-3"><label class="form-label">Username</label><input name="username" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Email</label><input name="email" type="email" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Password</label><input name="password" type="password" class="form-control" required></div>
+          <button type="submit" class="btn btn-warning w-100 btn-lg">Sign Up</button>
+        </form>
+        <p class="text-center mt-3 text-muted">Already have an account? <a href="/login" class="kojo-yellow">Login</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
