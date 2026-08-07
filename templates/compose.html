@@ -2,27 +2,56 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 *{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}
-body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh; padding:20px;}
-.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
-.menu{background:#FFD700; color:#000; border:none; padding:12px 15px; border-radius:8px; font-size:20px;}
+body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh;}
+.topbar{display:flex; justify-content:space-between; align-items:center; padding:20px; position:relative;}
+.menu{background:#FFD700; color:#000; border:none; padding:12px 15px; border-radius:8px; font-size:20px; font-weight:bold; cursor:pointer;}
 .balance-box{background:#1e1e3a; padding:10px 20px; border-radius:10px; border:1px solid #333;}
 .balance-box b{color:#00FF88;}
+.sidebar{position:fixed; left:-250px; top:0; width:250px; height:100%; background:#1e1e3a; border-right:2px solid #FFD700; transition:0.3s; padding:20px; z-index:1000;}
+.sidebar.active{left:0;}
+.sidebar a{display:block; color:#fff; text-decoration:none; padding:15px 10px; border-radius:8px; margin:10px 0;}
+.sidebar a:hover{background:#2a2a4a; color:#FFD700;}
+.overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;}
+.overlay.active{display:block;}
+.container{padding:20px;}
 h2{color:#FFD700; font-size:28px;}
-h2 span{color:#FFD700;}
 .subtitle{color:#aaa; margin-bottom:20px;}
-.card{background:rgba(30,30,58,0.7); backdrop-filter:blur(10px); padding:25px; border-radius:15px; border:1px solid #2a2a4a;}
+.card{background:rgba(30,30,58,0.8); backdrop-filter:blur(15px); padding:25px; border-radius:15px; border:2px solid #2a2a4a; max-width:700px; margin:0 auto;}
 .card h3{color:#FFD700; margin-bottom:20px; font-size:22px;}
 label{display:block; color:#aaa; margin:15px 0 5px;}
-textarea, input{width:100%; padding:14px; background:#000; border:1px solid #2a2a4a; color:#fff; border-radius:8px; font-size:15px;}
+textarea, input{width:100%; padding:14px; background:#0a0a1a; border:1px solid #2a2a4a; color:#fff; border-radius:8px; font-size:15px;}
 textarea{height:120px;}
+textarea:focus{outline:none; border-color:#FFD700; box-shadow:0 0 10px #FFD700;}
 .note{color:#888; font-size:13px; margin-top:10px;}
-.btn{background:#FFD700; color:#000; padding:14px 40px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:20px;}
-</style></head><body>
+.btn{background:#FFD700; color:#000; padding:14px 40px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:20px; width:100%;}
+.btn:hover{box-shadow:0 0 20px #FFD700;}
+.back-btn{display:inline-block; margin-bottom:20px; color:#FFD700; text-decoration:none; border:1px solid #FFD700; padding:8px 15px; border-radius:8px;}
+</style>
+<script>
+function toggleMenu(){
+document.getElementById('sidebar').classList.toggle('active');
+document.getElementById('overlay').classList.toggle('active');
+}
+</script>
+</head><body>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="sidebar" id="sidebar">
+<h3 style="color:#FFD700; margin-bottom:20px;">KOJO SMS</h3>
+<a href="/dashboard">Dashboard</a>
+<a href="/compose">Compose SMS</a>
+<a href="/fund_wallet">Fund Wallet</a>
+<a href="/logout">Logout</a>
+</div>
 
 <div class="topbar">
-<button class="menu">☰</button>
-<div class="balance-box"><span>BALANCE</span> <b>$0.00</b></div>
+<button class="menu" onclick="toggleMenu()">☰</button>
+<div class="balance-box"><span>BALANCE</span> <b>₦{{ balance }}</b></div>
 </div>
+
+<div class="container">
+<a href="/dashboard" class="back-btn">← Back to Dashboard</a>
 
 <h2>➤ Message Compose</h2>
 <p class="subtitle">Compose and send supported messages.</p>
@@ -40,8 +69,9 @@ textarea{height:120px;}
 <textarea name="message" placeholder="Type your message here..." required></textarea>
 
 <p class="note">Note: For best delivery, avoid spam words and links</p>
-<button class="btn">Send</button>
+<button class="btn">Send SMS</button>
 </form>
+</div>
 </div>
 
 </body></html>
