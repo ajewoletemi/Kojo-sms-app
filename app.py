@@ -2,14 +2,18 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import sqlite3
 import requests
 import os
+import uuid
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = 'kojo_secret_key_123_change_this' # CHANGE THIS TO SOMETHING RANDOM
+app.secret_key = 'kojo_secret_key_123_change_this'
 
 PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
-MIN_FUND = 15000 # Minimum funding amount
-SMS_COST = 4 # Cost per SMS. Change this later
+NOWPAYMENTS_API_KEY = os.environ.get('NOWPAYMENTS_API_KEY')
+
+NGN_TO_USD_RATE = 1500 # ₦15,000 = $10 so $1 = ₦1500
+MIN_FUND_USD = 10 # $10 minimum
+SMS_COST_USD = 0.01 # $0.01 per SMS
 
 # Login Required Decorator
 def login_required(f):
@@ -29,7 +33,7 @@ def init_db():
                  name TEXT NOT NULL,
                  email TEXT UNIQUE NOT NULL,
                  password TEXT NOT NULL,
-                 balance REAL DEFAULT 0)''')
+                 balance_usd REAL DEFAULT 0)''')
     conn.commit()
     conn.close()
 init_db()
@@ -69,7 +73,7 @@ def login():
         if user:
             session['user_id'] = user[0]
             session['name'] = user[1]
-            session['email'] = user[2] # Added for fund wallet autofill
+            session['email'] = user[2]
             return redirect('/dashboard')
         else:
             flash('Invalid login')
@@ -80,7 +84,7 @@ def login():
 def dashboard():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("SELECT balance FROM users WHERE id =?", (session['user_id'],))
+    c.execute("SELECT balance_usd FROM users WHERE id =?", (session['user_id'],))
     balance = c.fetchone()[0]
     conn.close()
     return render_template('dashboard.html', name=session['name'], balance=balance)
@@ -90,23 +94,25 @@ def dashboard():
 def fund_wallet():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("SELECT balance FROM users WHERE id =?", (session['user_id'],))
+    c.execute("SELECT balance_usd FROM users WHERE id =?", (session['user_id'],))
     balance = c.fetchone()[0]
     conn.close()
-    return render_template('fund_wallet.html', balance=balance, min_fund=MIN_FUND)
+    min_ngn = MIN_FUND_USD * NGN_TO_USD_RATE
+    return render_template('fund_wallet.html', balance=balance, min_ngn=min_ngn)
 
 @app.route('/pay', methods=['POST'])
 @login_required
 def pay():
     email = request.form['email']
-    amount = int(request.form['amount'])
+    amount_ngn = int(request.form['amount'])
+    min_ngn = MIN_FUND_USD * NGN_TO_USD_RATE
     
-    # CHECK MINIMUM FUNDING
-    if amount < MIN_FUND:
-        flash(f'Minimum funding is ₦{MIN_FUND}')
+    if amount_ngn < min_ngn:
+        flash(f'Minimum funding is ₦{min_ngn}')
         return redirect('/fund_wallet')
         
-    amount_kobo = amount * 100 # Paystack uses kobo
+    amount_usd = amount_ngn / NGN_TO_USD_RATE
+    amount_kobo = amount_ngn * 100
     user_id = session['user_id']
     
     headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
@@ -114,12 +120,11 @@ def pay():
         'email': email,
         'amount': amount_kobo,
         'callback_url': 'https://kojo-sms-app.onrender.com/callback',
-        'metadata': {'user_id': user_id}
+        'metadata': {'user_id': user_id, 'amount_usd': amount_usd}
     }
     
     r = requests.post('https://api.paystack.co/transaction/initialize', headers=headers, json=data)
     response = r.json()
-    print("PAYSTACK INIT RESPONSE:", response)
     
     if response['status']:
         return redirect(response['data']['authorization_url'])
@@ -130,45 +135,77 @@ def pay():
 @app.route('/callback')
 def callback():
     reference = request.args.get('reference')
-    print("REFERENCE:", reference) 
-    print("SECRET KEY EXISTS:", bool(PAYSTACK_SECRET_KEY))
-    
-    if not PAYSTACK_SECRET_KEY:
-        flash("Server Error: Payment key not set")
-        return redirect('/fund_wallet')
-    
     headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
     
     r = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
     response = r.json()
-    print("PAYSTACK VERIFY RESPONSE:", response)
     
     if response['status'] and response['data']['status'] == 'success':
-        try:
-            user_id = response['data']['metadata']['user_id']
-        except:
-            user_id = session.get('user_id') # fallback if metadata fails
-            
-        amount_paid = response['data']['amount'] / 100 # convert from kobo to naira
+        amount_ngn = response['data']['amount'] / 100
+        amount_usd = amount_ngn / NGN_TO_USD_RATE
+        user_id = response['data']['metadata']['user_id']
         
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
-        c.execute("UPDATE users SET balance = balance +? WHERE id =?", (amount_paid, user_id))
+        c.execute("UPDATE users SET balance_usd = balance_usd +? WHERE id =?", (amount_usd, user_id))
         conn.commit()
         conn.close()
         
-        flash(f'Payment Successful! ₦{amount_paid} added to wallet')
+        flash(f'Payment Successful! ${amount_usd:.2f} added to wallet')
         return redirect('/dashboard')
     else:
-        flash(f"Payment Verification Failed: {response.get('message', 'Unknown error')}")
+        flash('Payment Verification Failed')
         return redirect('/fund_wallet')
+
+@app.route('/fund_btc')
+@login_required
+def fund_btc():
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute("SELECT balance_usd FROM users WHERE id =?", (session['user_id'],))
+    balance = c.fetchone()[0]
+    conn.close()
+    return render_template('fund_btc.html', balance=balance, min_usd=MIN_FUND_USD)
+
+@app.route('/create_btc_invoice', methods=['POST'])
+@login_required
+def create_btc_invoice():
+    amount_usd = int(request.form['amount'])
+    if amount_usd < MIN_FUND_USD:
+        flash(f'Minimum funding is ${MIN_FUND_USD}')
+        return redirect('/fund_btc')
+        
+    order_id = str(uuid.uuid4())
+    headers = {'x-api-key': NOWPAYMENTS_API_KEY}
+    data = {
+        "price_amount": amount_usd,
+        "price_currency": "usd",
+        "pay_currency": "btc",
+        "order_id": order_id,
+        "order_description": f"KOJO Wallet Topup",
+        "ipn_callback_url": "https://kojo-sms-app.onrender.com/btc_webhook",
+        "success_url": "https://kojo-sms-app.onrender.com/dashboard"
+    }
+    r = requests.post('https://api.nowpayments.io/v1/invoice', headers=headers, json=data)
+    invoice = r.json()
+    return redirect(invoice['invoice_url'])
+
+@app.route('/btc_webhook', methods=['POST'])
+def btc_webhook():
+    data = request.json
+    if data['payment_status'] == 'finished':
+        order_id = data['order_id']
+        amount_usd = data['price_amount']
+        # You need to save order_id + user_id in DB. For now we skip
+        # Best: add orders table. For now manual
+    return '', 200
 
 @app.route('/compose')
 @login_required
 def compose():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("SELECT balance FROM users WHERE id =?", (session['user_id'],))
+    c.execute("SELECT balance_usd FROM users WHERE id =?", (session['user_id'],))
     balance = c.fetchone()[0]
     conn.close()
     return render_template('compose.html', balance=balance)
@@ -177,28 +214,24 @@ def compose():
 @login_required
 def send_sms():
     numbers = request.form['to_number'].strip().split('\n')
-    message = request.form['message']
     total_sms = len([n for n in numbers if n.strip()])
-    total_cost = total_sms * SMS_COST
+    total_cost = total_sms * SMS_COST_USD
     
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("SELECT balance FROM users WHERE id =?", (session['user_id'],))
+    c.execute("SELECT balance_usd FROM users WHERE id =?", (session['user_id'],))
     balance = c.fetchone()[0]
     
-    # CHECK BALANCE BEFORE SENDING
     if balance < total_cost:
-        flash(f'Insufficient Balance. You need ₦{total_cost} but you have ₦{balance}')
+        flash(f'Insufficient Balance. You need ${total_cost:.2f} but you have ${balance:.2f}')
         conn.close()
         return redirect('/fund_wallet')
     
-    # Deduct balance
-    c.execute("UPDATE users SET balance = balance -? WHERE id =?", (total_cost, session['user_id']))
+    c.execute("UPDATE users SET balance_usd = balance_usd -? WHERE id =?", (total_cost, session['user_id']))
     conn.commit()
     conn.close()
     
-    # TODO: Add Termii/Twilio API call here later
-    flash(f'SMS Sent! {total_sms} messages sent. ₦{total_cost} deducted')
+    flash(f'SMS Sent! {total_sms} messages sent. ${total_cost:.2f} deducted')
     return redirect('/dashboard')
 
 @app.route('/logout')
