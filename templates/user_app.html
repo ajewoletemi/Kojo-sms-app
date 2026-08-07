@@ -1,62 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kojo SMS</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-        body { background: #0D0B1E; color: #e0e0e0; padding: 20px; min-height: 100vh; }
-       .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-       .logo { color: #FFD700; font-size: 28px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-       .logout { color: #888; text-decoration: none; font-size: 15px; }
-       .wallet-card { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000; padding: 25px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3); }
-       .wallet-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; opacity: 0.8; }
-       .wallet-card .amount { font-size: 36px; font-weight: 900; margin-bottom: 15px; }
-       .btn-group { display: flex; gap: 10px; }
-       .btn-fund { background: #000; color: #FFD700; border: none; padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; text-decoration: none; text-align: center; flex: 1; }
-       .card { background: #1A1733; border: 1px solid #2A2744; padding: 20px; border-radius: 16px; margin-bottom: 20px; }
-       .card h2 { color: #FFD700; font-size: 18px; margin-bottom: 8px; }
-       .card p { color: #A0A0C0; font-size: 14px; margin-bottom: 15px; line-height: 1.5; }
-       .btn-primary { background: #FFD700; color: #000; border: none; padding: 14px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; width: 100%; cursor: pointer; transition: 0.3s; text-decoration: none; display: block; text-align: center; }
-       .btn-primary:hover { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); transform: translateY(-2px); }
-       .flash { padding: 12px; margin-bottom: 15px; border-radius: 8px; text-align: center; font-weight: 600; }
-       .success { background: rgba(0, 255, 0, 0.1); color: #4ade80; border: 1px solid #4ade80; }
-       .danger { background: rgba(255, 0, 0, 0.1); color: #f87171; border: 1px solid #f87171; }
-    </style>
-</head>
-<body>
-    <div class="topbar">
-        <div class="logo">KOJO</div>
-        <a href="{{ url_for('logout') }}" class="logout">Logout</a>
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body text-center">
+    <h2 class="card-title mb-3">Welcome to Kojo SMS</h2>
+    <p class="lead">Wallet Balance: <strong>${{ "%.2f"|format(wallet) }}</strong></p>
+    
+    <div class="d-grid gap-3 mt-4">
+      <a href="/send_sms" class="btn btn-primary btn-lg">Send SMS</a>
+      <a href="/fund_wallet" class="btn btn-success btn-lg">Fund Wallet</a>
     </div>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}{% for category, message in messages %}
-      <div class="flash {{ category }}">{{ message }}</div>
-      {% endfor %}{% endif %}
-    {% endwith %}
-
-    <div class="wallet-card">
-        <h3>WALLET BALANCE</h3>
-        <div class="amount">${{ "%.2f"|format(wallet) }}</div>
-        <div class="btn-group">
-            <a href="{{ url_for('fund_card') }}" class="btn-fund">Fund with Card</a>
-            <a href="{{ url_for('fund_btc') }}" class="btn-fund">Fund with BTC</a>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>Buy Virtual Number</h2>
-        <p>Get a virtual number to receive SMS Instantly - $5</p>
-        <button class="btn-primary">Buy Number</button>
-    </div>
-
-    <div class="card">
-        <h2>Send SMS</h2>
-        <p>Compose and send messages to any number. Cost: $0.20 per SMS</p>
-        <a href="{{ url_for('send_sms_page') }}" class="btn-primary">Send SMS</a>
-    </div>
-
-</body>
-</html>
+  </div>
+</div>
+{% endblock %}
