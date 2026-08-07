@@ -5,7 +5,7 @@ import os
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = 'kojo_secret_key_123' # change this to anything random
+app.secret_key = 'kojo_secret_key_123_change_this' # CHANGE THIS TO SOMETHING RANDOM
 
 PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
 MIN_FUND = 15000 # Minimum funding amount
@@ -69,6 +69,7 @@ def login():
         if user:
             session['user_id'] = user[0]
             session['name'] = user[1]
+            session['email'] = user[2] # Added for fund wallet autofill
             return redirect('/dashboard')
         else:
             flash('Invalid login')
@@ -118,23 +119,36 @@ def pay():
     
     r = requests.post('https://api.paystack.co/transaction/initialize', headers=headers, json=data)
     response = r.json()
+    print("PAYSTACK INIT RESPONSE:", response)
     
     if response['status']:
         return redirect(response['data']['authorization_url'])
     else:
-        flash('Payment initialization failed')
+        flash(f"Error: {response['message']}")
         return redirect('/fund_wallet')
 
 @app.route('/callback')
 def callback():
     reference = request.args.get('reference')
+    print("REFERENCE:", reference) 
+    print("SECRET KEY EXISTS:", bool(PAYSTACK_SECRET_KEY))
+    
+    if not PAYSTACK_SECRET_KEY:
+        flash("Server Error: Payment key not set")
+        return redirect('/fund_wallet')
+    
     headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
     
     r = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
     response = r.json()
+    print("PAYSTACK VERIFY RESPONSE:", response)
     
-    if response['data']['status'] == 'success':
-        user_id = response['data']['metadata']['user_id']
+    if response['status'] and response['data']['status'] == 'success':
+        try:
+            user_id = response['data']['metadata']['user_id']
+        except:
+            user_id = session.get('user_id') # fallback if metadata fails
+            
         amount_paid = response['data']['amount'] / 100 # convert from kobo to naira
         
         conn = sqlite3.connect('database.db')
@@ -146,7 +160,7 @@ def callback():
         flash(f'Payment Successful! ₦{amount_paid} added to wallet')
         return redirect('/dashboard')
     else:
-        flash('Payment failed')
+        flash(f"Payment Verification Failed: {response.get('message', 'Unknown error')}")
         return redirect('/fund_wallet')
 
 @app.route('/compose')
