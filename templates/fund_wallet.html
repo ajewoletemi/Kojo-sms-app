@@ -1,10 +1,53 @@
-<!DOCTYPE html><html><head><title>Fund Wallet - KOJO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh; padding:20px;}.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;}.back{background:#1e1e3a; color:#FFD700; border:1px solid #2a2a4a; padding:10px 15px; border-radius:8px; text-decoration:none;}.balance-box{background:#1e1e3a; padding:10px 20px; border-radius:10px; border:1px solid #333;}h1{color:#FFD700; text-align:center;}.card{background:rgba(30,30,58,0.8); padding:30px; border-radius:15px; border:2px solid #2a2a4a; max-width:500px; margin:20px auto;}label{display:block; color:#aaa; margin:15px 0 8px;}input{width:100%; padding:14px; background:#0a0a1a; border:1px solid #2a2a4a; color:#fff; border-radius:8px;}.btn{width:100%; background:#FFD700; color:#000; padding:15px; border:none; border-radius:8px; font-weight:bold; margin-top:20px;}.alert{background:rgba(255,215,0,0.1); border:1px solid #FFD700; padding:15px; border-radius:8px; margin-bottom:20px; color:#FFD700; text-align:center;}</style></head><body>
-<div class="topbar"><a href="/dashboard" class="back">← Back</a><div class="balance-box">BALANCE: <b>${{ "%.2f"|format(balance) }}</b></div></div>
-<h1>Fund Wallet with Card</h1>
-<div class="card"><div class="alert">⚠️ Minimum Funding: ₦{{ min_ngn }} = $10</div>
-<form action="/pay" method="POST">
-<label>Email Address</label><input type="email" name="email" value="{{ session.email }}" required>
-<label>Amount (NGN)</label><input type="number" name="amount" placeholder="Minimum ₦{{ min_ngn }}" min="{{ min_ngn }}" required>
-<button class="btn">Pay with Paystack</button></form></div></body></html>
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-success text-white">
+        <h3 class="mb-0">Fund Wallet</h3>
+      </div>
+      <div class="card-body p-4">
+        
+        <div class="alert alert-info" role="alert">
+          <h4 class="alert-heading">Current Balance</h4>
+          <p class="display-5 fw-bold mb-0">$0.00</p>
+        </div>
+
+        <h5 class="mt-4 mb-3">Top Up Amount</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3">
+            <button class="btn btn-outline-primary w-100">$5</button>
+          </div>
+          <div class="col-6 col-md-3">
+            <button class="btn btn-outline-primary w-100">$10</button>
+          </div>
+          <div class="col-6 col-md-3">
+            <button class="btn btn-outline-primary w-100">$20</button>
+          </div>
+          <div class="col-6 col-md-3">
+            <button class="btn btn-outline-primary w-100">$50</button>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Or Enter Custom Amount</label>
+          <input type="number" class="form-control form-control-lg" placeholder="Enter amount in USD">
+        </div>
+
+        <div class="d-grid mt-4">
+          <button class="btn btn-success btn-lg" disabled>
+            Pay with Paystack - Coming Soon
+          </button>
+        </div>
+        
+        <p class="text-center text-muted mt-3">
+          <small>Secure payments powered by Paystack</small>
+        </p>
+
+        <hr>
+        <a href="/user_app" class="btn btn-secondary">← Back to Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
