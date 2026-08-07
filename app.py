@@ -13,9 +13,9 @@ NOWPAYMENTS_API_KEY = os.environ.get('NOWPAYMENTS_API_KEY')
 
 NGN_TO_USD_RATE = 1500 # ₦15,000 = $10 so $1 = ₦1500
 MIN_FUND_USD = 10 # $10 minimum
-SMS_COST_USD = 0.01 # $0.01 per SMS
+SMS_COST_USD = 0.20 # $0.20 per SMS - Updated for more profit
+DB_PATH = '/data/database.db' # PERMANENT STORAGE
 
-# Login Required Decorator
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -24,9 +24,8 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Database
 def init_db():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +47,7 @@ def signup():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
-        conn = sqlite3.connect('database.db')
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         try:
             c.execute("INSERT INTO users (name, email, password) VALUES (?,?,?)", (name, email, password))
@@ -65,7 +64,7 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        conn = sqlite3.connect('database.db')
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         c.execute("SELECT * FROM users WHERE email =? AND password =?", (email, password))
         user = c.fetchone()
@@ -82,7 +81,7 @@ def login():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT balance_usd FROM users WHERE id =?", (session['user_id'],))
     balance = c.fetchone()[0]
@@ -92,7 +91,7 @@ def dashboard():
 @app.route('/fund_wallet')
 @login_required
 def fund_wallet():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT balance_usd FROM users WHERE id =?", (session['user_id'],))
     balance = c.fetchone()[0]
@@ -145,7 +144,7 @@ def callback():
         amount_usd = amount_ngn / NGN_TO_USD_RATE
         user_id = response['data']['metadata']['user_id']
         
-        conn = sqlite3.connect('database.db')
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         c.execute("UPDATE users SET balance_usd = balance_usd +? WHERE id =?", (amount_usd, user_id))
         conn.commit()
@@ -160,7 +159,7 @@ def callback():
 @app.route('/fund_btc')
 @login_required
 def fund_btc():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT balance_usd FROM users WHERE id =?", (session['user_id'],))
     balance = c.fetchone()[0]
@@ -196,14 +195,12 @@ def btc_webhook():
     if data['payment_status'] == 'finished':
         order_id = data['order_id']
         amount_usd = data['price_amount']
-        # You need to save order_id + user_id in DB. For now we skip
-        # Best: add orders table. For now manual
     return '', 200
 
 @app.route('/compose')
 @login_required
 def compose():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT balance_usd FROM users WHERE id =?", (session['user_id'],))
     balance = c.fetchone()[0]
@@ -217,7 +214,7 @@ def send_sms():
     total_sms = len([n for n in numbers if n.strip()])
     total_cost = total_sms * SMS_COST_USD
     
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT balance_usd FROM users WHERE id =?", (session['user_id'],))
     balance = c.fetchone()[0]
