@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kojo SMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { 
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            color: white; text-align: center;
+        }
+       .hero { max-width: 700px; padding: 20px; }
+        h1 { font-size: 4rem; color: #FFD700; margin-bottom: 10px; letter-spacing: 2px; }
+        h2 { font-size: 2rem; color: #FFD700; margin: 30px 0 10px; }
+        p { font-size: 1.1rem; margin-bottom: 30px; opacity: 0.8; }
+       .btn { 
+            display: inline-block; padding: 15px 35px; margin: 10px;
+            background: #FFD700; color: #000; text-decoration: none;
+            border-radius: 10px; font-weight: bold; font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+       .btn:hover { box-shadow: 0 0 25px rgba(255, 215, 0, 0.7); transform: translateY(-3px); }
+        footer { position: absolute; bottom: 20px; font-size: 12px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>KOJO SMS</h1>
+        <p>Buy Virtual Numbers & Receive SMS Online</p>
+        
+        <h2>Welcome</h2>
+        <p>Get numbers from 20+ countries instantly</p>
+        
+        <a href="{{ url_for('signup') }}" class="btn">Get Started</a>
+        <a href="{{ url_for('login') }}" class="btn">Login</a>
+    </div>
+    <footer>KOJO SMS. All rights reserved.</footer>
+</body>
+</html>
