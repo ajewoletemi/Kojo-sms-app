@@ -5,40 +5,45 @@
 body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh; padding:20px;}
 .topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;}
 .back{background:#1e1e3a; color:#FFD700; border:1px solid #2a2a4a; padding:10px 15px; border-radius:8px; text-decoration:none;}
+.back:hover{background:#2a2a4a;}
 .balance-box{background:#1e1e3a; padding:10px 20px; border-radius:10px; border:1px solid #333;}
-.balance-box b{color:#00FF88;}
+.balance-box b{color:#00FF88; font-size:18px;}
 h1{color:#FFD700; text-align:center; margin-bottom:5px; text-shadow:0 0 10px #FFD700;}
 .subtitle{text-align:center; color:#aaa; margin-bottom:30px;}
 .card{background:rgba(30,30,58,0.8); backdrop-filter:blur(15px); padding:30px; border-radius:15px; border:2px solid #2a2a4a; max-width:500px; margin:0 auto; box-shadow:0 0 30px rgba(255,215,0,0.15);}
+.alert{background:rgba(255,215,0,0.1); border:1px solid #FFD700; padding:15px; border-radius:8px; margin-bottom:20px; color:#FFD700; text-align:center; font-weight:bold;}
 label{display:block; color:#aaa; margin:15px 0 8px; font-size:14px;}
 input{width:100%; padding:14px; background:#0a0a1a; border:1px solid #2a2a4a; color:#fff; border-radius:8px; font-size:16px;}
 input:focus{outline:none; border-color:#FFD700; box-shadow:0 0 10px #FFD700;}
 .btn{width:100%; background:#FFD700; color:#000; padding:15px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:20px; font-size:16px; transition:0.3s;}
 .btn:hover{box-shadow:0 0 20px #FFD700; transform:scale(1.02);}
 .note{color:#888; font-size:13px; margin-top:15px; text-align:center;}
+.flash{color:#00FF88; text-align:center; margin-bottom:15px;}
 </style></head><body>
 
 <div class="topbar">
-<a href="/dashboard" class="back">← Back</a>
-<div class="balance-box"><span>BALANCE</span> <b>₦{{ balance }}</b></div>
+<a href="/dashboard" class="back">← Back to Dashboard</a>
+<div class="balance-box"><span>CURRENT BALANCE</span> <b>₦{{ balance }}</b></div>
 </div>
 
 <h1>Fund Wallet</h1>
-<p class="subtitle">Add money to your KOJO wallet</p>
+<p class="subtitle">Add money to send SMS and buy numbers</p>
 
 <div class="card">
+<div class="alert">⚠️ Minimum Funding: ₦{{ min_fund }}</div>
+
+{% with messages = get_flashed_messages() %}{% for message in messages %}<p class="flash">{{ message }}</p>{% endfor %}{% endwith %}
+
 <form action="/pay" method="POST">
 <label>Email Address</label>
-<input type="email" name="email" placeholder="Enter your email" required>
+<input type="email" name="email" placeholder="Enter your email" value="{{ session.email if session.email else '' }}" required>
 
 <label>Amount (NGN)</label>
-<input type="number" name="amount" placeholder="Enter amount" min="100" required>
+<input type="number" name="amount" placeholder="Minimum ₦15000" min="15000" required>
 
 <button class="btn">Pay with Paystack</button>
 </form>
-<p class="note">Secure payment powered by Paystack. Min: ₦100</p>
+<p class="note">Secure payment powered by Paystack. Funds reflect instantly.</p>
 </div>
-
-{% with messages = get_flashed_messages() %}{% for message in messages %}<p style="color:#FFD700; text-align:center; margin-top:15px;">{{ message }}</p>{% endfor %}{% endwith %}
 
 </body></html>
