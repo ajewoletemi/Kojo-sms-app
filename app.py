@@ -7,7 +7,7 @@ import uuid
 from functools import wraps
 import psycopg2
 from psycopg2 import pool
-from psycopg2.extras import RealDictCursor # makes data return as dict instead of tuple
+from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
 app.secret_key = 'kojo_secret_key_123_change_this_to_something_random'
@@ -27,7 +27,7 @@ def release_db(conn):
     db_pool.putconn(conn)
 
 def init_db():
-    """Run this once to create tables in Supabase"""
+    """Auto create tables in Supabase if they don't exist"""
     conn = get_db()
     c = conn.cursor()
     c.execute("""
@@ -41,12 +41,16 @@ def init_db():
     """)
     conn.commit()
     release_db(conn)
+    print("✅ Database tables checked/created")
+
+# Run init_db once when app starts
+init_db()
 
 PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
 NOWPAYMENTS_API_KEY = os.environ.get('NOWPAYMENTS_API_KEY')
 NGN_TO_USD_RATE = 1500 # ₦15,000 = $10 so $1 = ₦1500
 
-# ===== EXAMPLE ROUTES - REPLACE WITH YOURS =====
+# ===== YOUR ROUTES =====
 @app.route('/')
 def home():
     conn = get_db()
@@ -66,13 +70,23 @@ def add_user():
     try:
         c.execute("INSERT INTO users (name, email) VALUES (%s, %s)", (name, email))
         conn.commit()
-        flash("User added successfully!")
+        flash("User added successfully!", "success")
     except psycopg2.IntegrityError:
         conn.rollback()
-        flash("Email already exists!")
+        flash("Email already exists!", "danger")
     finally:
         release_db(conn)
     
+    return redirect(url_for('home'))
+
+@app.route('/delete_user/<int:user_id>')
+def delete_user(user_id):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM users WHERE id = %s", (user_id,))
+    conn.commit()
+    release_db(conn)
+    flash("User deleted!", "info")
     return redirect(url_for('home'))
 
 # ===== LOGIN DECORATOR EXAMPLE =====
@@ -85,5 +99,4 @@ def login_required(f):
     return decorated_function
 
 if __name__ == '__main__':
-    # init_db() # Uncomment this line once to create tables, then comment it again
     app.run(debug=True)
