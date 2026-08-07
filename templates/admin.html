@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+body { background: #0a0a1a; color: #fff; }
+.admin-card { background: #13132b; border: 1px solid #222244; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+h2 { color: #FFD700; font-weight: 900; text-shadow: 0 0 10px #FFD700; }
+table { width: 100%; color: #fff; }
+th { color: #FFD700; border-bottom: 2px solid #FFD700; padding: 10px; text-align: left; }
+td { padding: 10px; border-bottom: 1px solid #222244; }
+.badge-admin { background: #FFD700; color: #000; padding: 4px 10px; border-radius: 8px; font-weight: bold; }
+</style>
+
+<div class="container mt-4">
+  <h2 class="mb-4">KOJO ADMIN PANEL</h2>
+
+  <div class="admin-card">
+    <h3 style="color: #FFD700;">All Users</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Wallet Balance</th>
+          <th>Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>{{ user.id }}</td>
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td style="color: #FFD700; font-weight: bold;">${{ "%.2f"|format(user.wallet) }}</td>
+          <td>{% if user.role == 'admin' %}<span class="badge-admin">ADMIN</span>{% else %}user{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-card">
+    <h3 style="color: #FFD700;">Recent Deposits</h3>
+    <p style="color: #aaa;">Deposits are added automatically via Paystack webhook. <br>
+    If a payment fails, you can manually add funds in Supabase for now.</p>
+    <a href="https://dashboard.paystack.com/#/Payments" target="_blank" class="btn" style="background: #FFD700; color: #000; font-weight: bold;">View Payments on Paystack</a>
+  </div>
+
+</div>
+{% endblock %}
