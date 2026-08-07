@@ -23,6 +23,7 @@ def release_db(conn):
 @app.route('/')
 def home():
     if 'user_id' not in session:
+        flash("Please login first", "info")
         return redirect(url_for('login'))
     
     conn = get_db()
@@ -32,8 +33,12 @@ def home():
     release_db(conn)
     return render_template('index.html', users=users, user_name=session.get('user_name'))
 
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    if 'user_id' in session: # If already logged in, go home
+        return redirect(url_for('home'))
+        
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email')
@@ -53,7 +58,7 @@ def signup():
             conn.commit()
             release_db(conn)
             flash("Account created! Please login.", "success")
-            return redirect(url_for('login'))
+            return redirect(url_for('login')) # STAYS ON LOGIN PAGE
         except psycopg2.IntegrityError:
             flash("Email already exists!", "danger")
             return redirect(url_for('signup'))
@@ -62,8 +67,12 @@ def signup():
     
     return render_template('signup.html')
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if 'user_id' in session: # If already logged in, go home
+        return redirect(url_for('home'))
+        
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
@@ -84,11 +93,13 @@ def login():
     
     return render_template('login.html')
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     flash("You have been logged out.", "info")
     return redirect(url_for('login'))
+
 
 @app.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
@@ -104,6 +115,7 @@ def delete_user(user_id):
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")
     return redirect(url_for('home'))
+
 
 if __name__ == '__main__':
     app.run(debug=False)
