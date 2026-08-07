@@ -17,16 +17,18 @@ TWILIO_FROM = os.environ.get("TWILIO_FROM")
 
 pool = SimpleConnectionPool(1, 10, DATABASE_URL)
 
-ADMIN_EMAIL = "jedidiah@gmail.com" # <-- ONLY YOUR EMAIL IS ADMIN
+ADMIN_EMAIL = "jedidiah@gmail.com"
 
 def init_db():
     conn = pool.getconn(); c = conn.cursor()
     c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE")
     c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS wallet_balance DECIMAL(10,2) DEFAULT 0.00")
+    c.execute('''CREATE TABLE IF NOT EXISTS deposits
+             (id SERIAL PRIMARY KEY, user_id INTEGER, amount DECIMAL(10,2),
+              method VARCHAR(50), status VARCHAR(20) DEFAULT 'pending',
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
 
-    # 1. Make only YOU admin
     c.execute("UPDATE users SET is_admin = TRUE WHERE email = %s", (ADMIN_EMAIL,))
-    # 2. Make everyone else NOT admin
     c.execute("UPDATE users SET is_admin = FALSE WHERE email!= %s", (ADMIN_EMAIL,))
     conn.commit(); pool.putconn(conn)
 
@@ -50,7 +52,6 @@ def landing():
         else: return redirect(url_for('user_app'))
     return render_template('landing.html')
 
-# ADMIN DASHBOARD
 @app.route('/dashboard')
 def dashboard():
     user = get_user()
@@ -59,10 +60,14 @@ def dashboard():
 
     conn = get_db(); c = conn.cursor()
     c.execute("SELECT id, name, email, created_at, wallet_balance FROM users ORDER BY id DESC")
-    users = c.fetchall(); release_db(conn)
-    return render_template('index.html', users=users, user_name=user['name'])
+    users = c.fetchall()
 
-# USER DASHBOARD
+    c.execute("SELECT d.id, u.name, u.email, d.amount, d.method, d.status, d.created_at FROM deposits d JOIN users u ON d.user_id = u.id WHERE d.status = 'pending' ORDER BY d.id DESC")
+    deposits = c.fetchall()
+    release_db(conn)
+
+    return render_template('index.html', users=users, deposits=deposits, user_name=user['name'])
+
 @app.route('/app')
 def user_app():
     user = get_user()
@@ -70,7 +75,6 @@ def user_app():
     if user['is_admin']: return redirect(url_for('dashboard'))
     return render_template('user_app.html', user_name=user['name'], wallet=user['wallet'], btc_address=BTC_ADDRESS)
 
-# SEND SMS PAGE
 @app.route('/send_sms')
 def send_sms_page():
     user = get_user()
@@ -93,7 +97,6 @@ def send_sms_action():
         flash(f"Insufficient balance. Need ${total_cost:.2f}", "danger")
         return redirect(url_for('send_sms_page'))
 
-    # Send with Twilio
     client = Client(TWILIO_SID, TWILIO_TOKEN)
     sent = 0
     for num in numbers:
@@ -103,7 +106,6 @@ def send_sms_action():
         except Exception as e:
             print(f"Failed to send to {num}: {e}")
 
-    # Deduct wallet
     if sent > 0:
         conn = get_db(); c = conn.cursor()
         c.execute("UPDATE users SET wallet_balance = wallet_balance - %s WHERE id = %s", (sent * cost_per_sms, user['id']))
@@ -112,34 +114,53 @@ def send_sms_action():
     flash(f"{sent} SMS sent! ${sent * cost_per_sms:.2f} deducted.", "success")
     return redirect(url_for('send_sms_page'))
 
-# PAYMENT ROUTES
 @app.route('/fund_card')
 def fund_card():
     user = get_user()
     if not user: return redirect(url_for('login'))
 
-    amount = 1000 # $10.00 in kobo
+    amount = 1000
     headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
-    data = {
-        'email': user['email'],
-        'amount': amount,
-        'callback_url': url_for('payment_callback', _external=True),
-        'metadata': {'user_id': user['id']}
-    }
+    data = {'email': user['email'], 'amount': amount, 'callback_url': url_for('payment_callback', _external=True), 'metadata': {'user_id': user['id']}}
     r = requests.post('https://api.paystack.co/transaction/initialize', json=data, headers=headers)
     res = r.json()
 
-    if res['status']:
-        return redirect(res['data']['authorization_url'])
-    else:
-        flash("Payment init failed", "danger")
-        return redirect(url_for('user_app'))
+    if res['status']: return redirect(res['data']['authorization_url'])
+    else: flash("Payment init failed", "danger"); return redirect(url_for('user_app'))
 
 @app.route('/fund_btc')
 def fund_btc():
     user = get_user()
     if not user: return redirect(url_for('login'))
     return render_template('fund_btc.html', btc_address=BTC_ADDRESS, user_name=user['name'])
+
+@app.route('/btc_payment_made', methods=['POST'])
+def btc_payment_made():
+    user = get_user()
+    if not user: return redirect(url_for('login'))
+
+    conn = get_db(); c = conn.cursor()
+    c.execute("INSERT INTO deposits (user_id, amount, method) VALUES (%s, %s, %s)", (user['id'], 10.00, 'BTC'))
+    conn.commit(); release_db(conn)
+
+    flash("Deposit request submitted! Admin will credit $10 after confirming your payment.", "success")
+    return redirect(url_for('user_app'))
+
+@app.route('/approve_deposit/<int:deposit_id>')
+def approve_deposit(deposit_id):
+    admin = get_user()
+    if not admin or not admin['is_admin']: return redirect(url_for('login'))
+
+    conn = get_db(); c = conn.cursor()
+    c.execute("SELECT user_id, amount FROM deposits WHERE id = %s", (deposit_id,))
+    dep = c.fetchone()
+
+    c.execute("UPDATE users SET wallet_balance = wallet_balance + %s WHERE id = %s", (dep[1], dep[0]))
+    c.execute("UPDATE deposits SET status = 'approved' WHERE id = %s", (deposit_id,))
+    conn.commit(); release_db(conn)
+
+    flash(f"${dep[1]} credited to user wallet", "success")
+    return redirect(url_for('dashboard'))
 
 @app.route('/payment_callback')
 def payment_callback():
@@ -150,13 +171,12 @@ def payment_callback():
 
     if res['status'] and res['data']['status'] == 'success':
         user_id = res['data']['metadata']['user_id']
-        amount = res['data']['amount'] / 100 # convert kobo to dollars
+        amount = res['data']['amount'] / 100
         conn = get_db(); c = conn.cursor()
         c.execute("UPDATE users SET wallet_balance = wallet_balance + %s WHERE id = %s", (amount, user_id))
         conn.commit(); release_db(conn)
         flash(f"Payment successful! ${amount} credited to wallet.", "success")
-    else:
-        flash("Payment verification failed", "danger")
+    else: flash("Payment verification failed", "danger")
     return redirect(url_for('user_app'))
 
 @app.route('/signup', methods=['GET', 'POST'])
