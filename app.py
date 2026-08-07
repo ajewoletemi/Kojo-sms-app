@@ -8,8 +8,17 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey_change_me")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 pool = SimpleConnectionPool(1, 10, DATABASE_URL)
+
+def init_db(): # THIS ADDS is_admin AUTOMATICALLY
+    conn = pool.getconn(); c = conn.cursor()
+    c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE")
+    c.execute("UPDATE users SET is_admin = TRUE WHERE id = 1")
+    conn.commit(); release_db(conn)
+
 def get_db(): return pool.getconn()
 def release_db(conn): pool.putconn(conn)
+
+init_db() # RUN ON STARTUP
 
 def get_user():
     if 'user_id' not in session: return None
@@ -31,7 +40,7 @@ def dashboard():
         return redirect(url_for('login'))
     if not user['is_admin']:
         flash("Access denied. Admin only.", "danger")
-        return redirect(url_for('logout')) # kick non-admins out
+        return redirect(url_for('logout')) 
     
     conn = get_db(); c = conn.cursor()
     c.execute("SELECT id, name, email, created_at FROM users ORDER BY id DESC")
@@ -62,11 +71,10 @@ def login():
         user = c.fetchone(); release_db(conn)
         if user and check_password_hash(user[3], password):
             session['user_id'], session['user_name'] = user[0], user[1]
-            if user[4]: # is_admin
-                return redirect(url_for('dashboard'))
+            if user[4]: return redirect(url_for('dashboard'))
             else:
                 flash("Welcome! Admin dashboard is restricted.", "info")
-                return redirect(url_for('logout')) # normal users get logged out
+                return redirect(url_for('logout'))
         else: flash("Invalid email or password!", "danger")
     return render_template('login.html')
 
