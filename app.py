@@ -7,17 +7,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from twilio.rest import Client
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey_change_me")
+app.secret_key = os.environ.get("SECRET_KEY")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
-BTC_ADDRESS = os.environ.get("BTC_ADDRESS", "bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+BTC_ADDRESS = os.environ.get("BTC_ADDRESS")
 TWILIO_SID = os.environ.get("TWILIO_SID")
 TWILIO_TOKEN = os.environ.get("TWILIO_TOKEN")
 TWILIO_FROM = os.environ.get("TWILIO_FROM")
 
 pool = SimpleConnectionPool(1, 10, DATABASE_URL)
 
-ADMIN_EMAIL = "jedidiah@gmail.com" # <-- ONLY YOUR EMAIL
+ADMIN_EMAIL = "jedidiah@gmail.com" # <-- ONLY YOUR EMAIL IS ADMIN
 
 def init_db():
     conn = pool.getconn(); c = conn.cursor()
