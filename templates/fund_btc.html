@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <title>Fund with BTC - Kojo</title>
     <style>
-        body { background: #0D0B1E; color: #e0e0e0; font-family: Segoe UI; padding: 30px; text-align: center; }
-       .card { background: #1A1733; padding: 30px; border-radius: 16px; max-width: 500px; margin: 50px auto; border: 1px solid #FFD700; }
-        h2 { color: #FFD700; margin-bottom: 20px; }
-       .address { background: #0D0B1E; padding: 15px; border-radius: 10px; margin: 20px 0; word-break: break-all; border: 1px dashed #FFD700; }
-        a { color: #FFD700; text-decoration: none; font-weight: bold; }
+        body { background: #0D0B1E; color: #e0e0e0; font-family: Segoe UI; padding: 20px; }
+   .card { background: linear-gradient(135deg, #1A1733 0%, #2A2744 100%); padding: 30px; border-radius: 20px; max-width: 500px; margin: 50px auto; border: 2px solid #FFD700; }
+        h2 { color: #FFD700; margin-bottom: 15px; font-size: 28px; text-align: center; }
+        p { text-align: center; color: #A0A0C0; margin-bottom: 20px; }
+   .address { background: #0D0B1E; padding: 20px; border-radius: 12px; margin: 20px 0; word-break: break-all; border: 2px dashed #FFD700; font-size: 16px; text-align: center; color: #FFD700; font-weight: 700; }
+   .btn-confirm { background: #FFD700; color: #000; border: none; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 16px; width: 100%; margin: 15px 0; cursor: pointer; }
+        a { color: #FFD700; text-decoration: none; font-weight: bold; display: block; text-align: center; }
     </style>
 </head>
 <body>
@@ -16,7 +18,12 @@
         <h2>Fund with Bitcoin</h2>
         <p>Send BTC to the address below</p>
         <div class="address">{{ btc_address }}</div>
-        <p>Send $10 worth of BTC. Wallet will be credited after 1 confirmation.</p>
+        <p><b>Send $10 worth of BTC minimum.</b> Wallet will be credited after 1 confirmation and admin approval.</p>
+
+        <form method="POST" action="{{ url_for('btc_payment_made') }}">
+            <button type="submit" class="btn-confirm">I Have Made Payment</button>
+        </form>
+
         <a href="{{ url_for('user_app') }}">← Back to Dashboard</a>
     </div>
 </body>
