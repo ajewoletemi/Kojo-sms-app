@@ -3,7 +3,10 @@ from flask import Flask, render_template, request, redirect, session, flash
 app = Flask(__name__)
 app.secret_key = "kojo_secret_key_123"
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
+def index():
+    return render_template('index.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -37,8 +40,12 @@ def send_sms():
 def fund_wallet():
     return render_template('fund_wallet.html')
 
+@app.route('/fund_btc')
+def fund_btc():
+    return render_template('fund_btc.html')
+
 @app.route('/logout')
 def logout():
     session.pop('user', None)
     flash("Logged out", "info")
-    return redirect('/login')
+    return redirect('/')
