@@ -4,7 +4,7 @@ import psycopg2
 from psycopg2.pool import SimpleConnectionPool
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey_change_me")  # Add SECRET_KEY to Render too
+app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey_change_me")
 
 # --- DATABASE CONNECTION ---
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -12,11 +12,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is not set. Add it to Render Environment Variables")
 
-# Add pooler params if using Supabase pooler on port 6543
-if "pooler.supabase.com" in DATABASE_URL and "pgbouncer" not in DATABASE_URL:
-    separator = "&" if "?" in DATABASE_URL else "?"
-    DATABASE_URL += f"{separator}pgbouncer=true&connection_limit=1"
-
+# DON'T add pgbouncer params here. Your URL already has them
 pool = SimpleConnectionPool(1, 10, DATABASE_URL)
 
 def get_db():
@@ -55,7 +51,7 @@ def add_user():
         flash("User added successfully!", "success")
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")
-        print(f"DB ERROR: {e}") # Check Render Logs for this
+        print(f"DB ERROR: {e}")
     
     return redirect(url_for('home'))
 
@@ -81,4 +77,4 @@ def signup():
 
 
 if __name__ == '__main__':
-    app.run(debug=False) # debug=False for production
+    app.run(debug=False)
