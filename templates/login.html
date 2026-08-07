@@ -1,28 +1,33 @@
-<!DOCTYPE html><html><head><title>Login - KOJO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}
-body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); height:100vh; display:flex; justify-content:center; align-items:center; margin:0;}
-.box{background:rgba(30,30,58,0.8); backdrop-filter:blur(15px); padding:40px; border-radius:20px; width:90%; max-width:400px; border:2px solid #2a2a4a; box-shadow:0 0 30px rgba(255,215,0,0.2);}
-h2{color:#FFD700; text-align:center; font-size:28px; margin-bottom:5px; text-shadow:0 0 10px #FFD700;}
-.subtitle{text-align:center; color:#aaa; margin-bottom:30px;}
-input{width:100%; padding:14px; margin:12px 0; background:#0a0a1a; border:1px solid #2a2a4a; color:#fff; border-radius:8px; font-size:15px;}
-input:focus{outline:none; border-color:#FFD700; box-shadow:0 0 10px #FFD700;}
-button{width:100%; padding:15px; background:#FFD700; color:#000; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; margin-top:10px; transition:0.3s;}
-button:hover{box-shadow:0 0 20px #FFD700; transform:scale(1.02);}
-a{color:#4a90e2; text-decoration:none;}
-a:hover{text-decoration:underline;}
-p{text-align:center; margin-top:15px; color:#aaa;}
-.flash{color:#ff4444; text-align:center; margin-bottom:15px;}
-</style></head><body>
-<div class="box">
-<h2>KOJO SMS</h2>
-<p class="subtitle">Login to your account</p>
-{% with messages = get_flashed_messages() %}{% for message in messages %}<p class="flash">{{ message }}</p>{% endfor %}{% endwith %}
-<form method="POST">
-<input type="email" name="email" placeholder="Email" required>
-<input type="password" name="password" placeholder="Password" required>
-<button>Login</button>
-</form>
-<p>No account? <a href="/signup">Signup</a></p>
-</div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <style>
+        body { font-family: Arial; max-width: 400px; margin: 50px auto; padding: 20px; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; }
+       .flash { padding: 10px; margin: 10px 0; border-radius: 5px; }
+       .success { background: #d4edda; color: #155724; }
+       .danger { background: #f8d7da; color: #721c24; }
+       .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h2>Login</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <label>Email:</label>
+        <input type="email" name="email" required>
+        <button type="submit">Login</button>
+    </form>
+    <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p>
+</body>
+</html>
