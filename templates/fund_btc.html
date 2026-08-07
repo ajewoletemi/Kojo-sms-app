@@ -1,9 +1,23 @@
-<!DOCTYPE html><html><head><title>Fund with BTC - KOJO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh; padding:20px;}.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;}.back{background:#1e1e3a; color:#FFD700; padding:10px 15px; border-radius:8px; text-decoration:none;}h1{color:#FFD700; text-align:center;}.card{background:rgba(30,30,58,0.8); padding:30px; border-radius:15px; border:2px solid #2a2a4a; max-width:500px; margin:20px auto;}label{display:block; color:#aaa; margin:15px 0 8px;}input{width:100%; padding:14px; background:#0a0a1a; border:1px solid #2a2a4a; color:#fff; border-radius:8px;}.btn{width:100%; background:#F7931A; color:#000; padding:15px; border:none; border-radius:8px; font-weight:bold; margin-top:20px;}.alert{background:rgba(247,147,26,0.1); border:1px solid #F7931A; padding:15px; border-radius:8px; margin-bottom:20px; color:#F7931A; text-align:center;}</style></head><body>
-<div class="topbar"><a href="/dashboard" class="back">← Back</a><div>BALANCE: <b>${{ "%.2f"|format(balance) }}</b></div></div>
-<h1>Fund Wallet with Bitcoin</h1>
-<div class="card"><div class="alert">⚠️ Minimum Funding: ${{ min_usd }}</div>
-<form action="/create_btc_invoice" method="POST">
-<label>Amount (USD)</label><input type="number" name="amount" placeholder="Minimum $10" min="{{ min_usd }}" required>
-<button class="btn">Pay with BTC</button></form><p style="color:#888; font-size:13px; margin-top:15px; text-align:center;">Powered by NOWPayments. 1 confirmation needed.</p></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fund with BTC - Kojo</title>
+    <style>
+        body { background: #0D0B1E; color: #e0e0e0; font-family: Segoe UI; padding: 30px; text-align: center; }
+       .card { background: #1A1733; padding: 30px; border-radius: 16px; max-width: 500px; margin: 50px auto; border: 1px solid #FFD700; }
+        h2 { color: #FFD700; margin-bottom: 20px; }
+       .address { background: #0D0B1E; padding: 15px; border-radius: 10px; margin: 20px 0; word-break: break-all; border: 1px dashed #FFD700; }
+        a { color: #FFD700; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Fund with Bitcoin</h2>
+        <p>Send BTC to the address below</p>
+        <div class="address">{{ btc_address }}</div>
+        <p>Send $10 worth of BTC. Wallet will be credited after 1 confirmation.</p>
+        <a href="{{ url_for('user_app') }}">← Back to Dashboard</a>
+    </div>
+</body>
+</html>
