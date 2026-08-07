@@ -10,31 +10,25 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
-BTC_ADDRESS = os.environ.get("BTC_ADDRESS")
-TWILIO_SID = os.environ.get("TWILIO_SID")
-TWILIO_TOKEN = os.environ.get("TWILIO_TOKEN")
+BTC_ADDRESS = os.environ.get("BTC_ADDRESS") # <-- NOW READS YOURS
+TWILIO_SID = os.environ.get("TWILIO_ACCOUNT_SID") # <-- MATCHES YOURS
+TWILIO_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN") # <-- MATCHES YOURS
 TWILIO_FROM = os.environ.get("TWILIO_FROM")
 
 pool = SimpleConnectionPool(1, 10, DATABASE_URL)
-
 ADMIN_EMAIL = "jedidiah@gmail.com"
 
 def init_db():
     conn = pool.getconn(); c = conn.cursor()
     c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE")
     c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS wallet_balance DECIMAL(10,2) DEFAULT 0.00")
-    c.execute('''CREATE TABLE IF NOT EXISTS deposits
-             (id SERIAL PRIMARY KEY, user_id INTEGER, amount DECIMAL(10,2),
-              method VARCHAR(50), status VARCHAR(20) DEFAULT 'pending',
-              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
-
+    c.execute('''CREATE TABLE IF NOT EXISTS deposits (id SERIAL PRIMARY KEY, user_id INTEGER, amount DECIMAL(10,2), method VARCHAR(50), status VARCHAR(20) DEFAULT 'pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
     c.execute("UPDATE users SET is_admin = TRUE WHERE email = %s", (ADMIN_EMAIL,))
     c.execute("UPDATE users SET is_admin = FALSE WHERE email!= %s", (ADMIN_EMAIL,))
     conn.commit(); pool.putconn(conn)
 
 def get_db(): return pool.getconn()
 def release_db(conn): pool.putconn(conn)
-
 init_db()
 
 def get_user():
@@ -57,15 +51,12 @@ def dashboard():
     user = get_user()
     if not user: flash("Please login first", "info"); return redirect(url_for('login'))
     if not user['is_admin']: flash("Access denied. Admin only.", "danger"); return redirect(url_for('user_app'))
-
     conn = get_db(); c = conn.cursor()
     c.execute("SELECT id, name, email, created_at, wallet_balance FROM users ORDER BY id DESC")
     users = c.fetchall()
-
     c.execute("SELECT d.id, u.name, u.email, d.amount, d.method, d.status, d.created_at FROM deposits d JOIN users u ON d.user_id = u.id WHERE d.status = 'pending' ORDER BY d.id DESC")
     deposits = c.fetchall()
     release_db(conn)
-
     return render_template('index.html', users=users, deposits=deposits, user_name=user['name'])
 
 @app.route('/app')
@@ -86,31 +77,21 @@ def send_sms_page():
 def send_sms_action():
     user = get_user()
     if not user: return redirect(url_for('login'))
-
     numbers = request.form.get('numbers').strip().split('\n')
     message = request.form.get('message')
     numbers = [n.strip() for n in numbers if n.strip()]
     cost_per_sms = 0.20
     total_cost = len(numbers) * cost_per_sms
-
-    if user['wallet'] < total_cost:
-        flash(f"Insufficient balance. Need ${total_cost:.2f}", "danger")
-        return redirect(url_for('send_sms_page'))
-
+    if user['wallet'] < total_cost: flash(f"Insufficient balance. Need ${total_cost:.2f}", "danger"); return redirect(url_for('send_sms_page'))
     client = Client(TWILIO_SID, TWILIO_TOKEN)
     sent = 0
     for num in numbers:
-        try:
-            client.messages.create(body=message, from_=TWILIO_FROM, to=num)
-            sent += 1
-        except Exception as e:
-            print(f"Failed to send to {num}: {e}")
-
+        try: client.messages.create(body=message, from_=TWILIO_FROM, to=num); sent += 1
+        except Exception as e: print(f"Failed to send to {num}: {e}")
     if sent > 0:
         conn = get_db(); c = conn.cursor()
         c.execute("UPDATE users SET wallet_balance = wallet_balance - %s WHERE id = %s", (sent * cost_per_sms, user['id']))
         conn.commit(); release_db(conn)
-
     flash(f"{sent} SMS sent! ${sent * cost_per_sms:.2f} deducted.", "success")
     return redirect(url_for('send_sms_page'))
 
@@ -118,13 +99,11 @@ def send_sms_action():
 def fund_card():
     user = get_user()
     if not user: return redirect(url_for('login'))
-
     amount = 1000
     headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
     data = {'email': user['email'], 'amount': amount, 'callback_url': url_for('payment_callback', _external=True), 'metadata': {'user_id': user['id']}}
     r = requests.post('https://api.paystack.co/transaction/initialize', json=data, headers=headers)
     res = r.json()
-
     if res['status']: return redirect(res['data']['authorization_url'])
     else: flash("Payment init failed", "danger"); return redirect(url_for('user_app'))
 
@@ -138,11 +117,9 @@ def fund_btc():
 def btc_payment_made():
     user = get_user()
     if not user: return redirect(url_for('login'))
-
     conn = get_db(); c = conn.cursor()
     c.execute("INSERT INTO deposits (user_id, amount, method) VALUES (%s, %s, %s)", (user['id'], 10.00, 'BTC'))
     conn.commit(); release_db(conn)
-
     flash("Deposit request submitted! Admin will credit $10 after confirming your payment.", "success")
     return redirect(url_for('user_app'))
 
@@ -150,15 +127,12 @@ def btc_payment_made():
 def approve_deposit(deposit_id):
     admin = get_user()
     if not admin or not admin['is_admin']: return redirect(url_for('login'))
-
     conn = get_db(); c = conn.cursor()
     c.execute("SELECT user_id, amount FROM deposits WHERE id = %s", (deposit_id,))
     dep = c.fetchone()
-
     c.execute("UPDATE users SET wallet_balance = wallet_balance + %s WHERE id = %s", (dep[1], dep[0]))
     c.execute("UPDATE deposits SET status = 'approved' WHERE id = %s", (deposit_id,))
     conn.commit(); release_db(conn)
-
     flash(f"${dep[1]} credited to user wallet", "success")
     return redirect(url_for('dashboard'))
 
@@ -168,7 +142,6 @@ def payment_callback():
     headers = {'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'}
     r = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
     res = r.json()
-
     if res['status'] and res['data']['status'] == 'success':
         user_id = res['data']['metadata']['user_id']
         amount = res['data']['amount'] / 100
@@ -199,7 +172,6 @@ def login():
         user = get_user()
         if user and user['is_admin']: return redirect(url_for('dashboard'))
         else: return redirect(url_for('user_app'))
-
     if request.method == 'POST':
         email, password = request.form.get('email'), request.form.get('password')
         conn = get_db(); c = conn.cursor()
