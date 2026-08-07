@@ -1,27 +1,62 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card mb-4" style="background: #FFD700; color: #000; border: none;">
-  <div class="card-body">
-    <p class="mb-1 fw-bold">WALLET BALANCE</p>
-    <h1 class="display-4 fw-bold">${{ "%.2f"|format(wallet) }}</h1>
-    <div class="d-grid gap-2">
-      <a href="/fund_wallet" class="btn btn-dark btn-lg">Fund with Card</a>
-      <a href="/fund_btc" class="btn btn-dark btn-lg">Fund with BTC</a>
+<style>
+body { background: #0a0a1a; }
+.kojo-card {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  border-radius: 20px;
+  padding: 25px;
+  color: #000;
+  margin-bottom: 20px;
+}
+.kojo-card h4 { font-weight: 800; font-size: 14px; margin-bottom: 5px; }
+.kojo-card h1 { font-weight: 900; font-size: 2.5rem; margin-bottom: 20px; }
+.btn-black {
+  background: #000; color: #FFD700; border: none; font-weight: bold;
+  padding: 10px 20px; border-radius: 12px; margin-right: 10px;
+}
+.btn-black:hover { background: #222; color: #FFD700; }
+.feature-card {
+  background: #13132b; border: 1px solid #2a2a4a; border-radius: 16px;
+  padding: 20px; margin-bottom: 15px; color: #fff;
+}
+.feature-card h3 { color: #FFD700; font-weight: 800; font-size: 1.2rem; }
+.btn-yellow {
+  background: #FFD700; color: #000; border: none; font-weight: bold;
+  padding: 10px 25px; border-radius: 10px; margin-top: 10px;
+}
+.btn-yellow:hover { background: #ffea00; color: #000; }
+</style>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 style="color: #FFD700; text-shadow: 0 0 10px #FFD700; font-weight: 900;">KOJO</h2>
+    <a href="/logout" style="color: #fff; text-decoration: none;">Logout</a>
+  </div>
+
+  <!-- WALLET CARD -->
+  <div class="kojo-card">
+    <h4>WALLET BALANCE</h4>
+    <h1>${{ "%.2f"|format(wallet) }}</h1>
+    <div>
+      <a href="/fund_wallet" class="btn btn-black">Fund with Card</a>
+      <a href="/fund_btc" class="btn btn-black">Fund with BTC</a>
     </div>
   </div>
-</div>
-<div class="card mb-3">
-  <div class="card-body">
-    <h4 class="kojo-yellow">Buy Virtual Number</h4>
-    <p>Get a virtual number to receive SMS Instantly - $5</p>
-    <button class="btn btn-warning" disabled>Coming Soon</button>
+
+  <!-- BUY NUMBER CARD -->
+  <div class="feature-card">
+    <h3>Buy Virtual Number</h3>
+    <p style="color: #b0b0b0;">Get a virtual number to receive SMS Instantly <br>- $5</p>
+    <button class="btn btn-yellow" disabled>Buy Number</button>
   </div>
-</div>
-<div class="card mb-3">
-  <div class="card-body">
-    <h4 class="kojo-yellow">Send SMS</h4>
-    <p>Compose and send messages to any number. Cost: <b>$0.20 per SMS</b></p>
-    <a href="/send_sms" class="btn btn-warning">Send SMS</a>
+
+  <!-- SEND SMS CARD -->
+  <div class="feature-card">
+    <h3>Send SMS</h3>
+    <p style="color: #b0b0b0;">Compose and send messages to any number. Cost: <b style="color: #fff;">$0.20 per SMS</b></p>
+    <a href="/send_sms" class="btn btn-yellow">Send SMS</a>
   </div>
+
 </div>
 {% endblock %}
