@@ -1,30 +1,65 @@
-<!DOCTYPE html><html><head><title>KOJO SMS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}
-body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh; text-align:center;}
-.header{padding:80px 20px 40px;}
-.header h1{color:#FFD700; font-size:48px; margin-bottom:10px; text-shadow:0 0 20px #FFD700;}
-.header p{color:#aaa; font-size:18px;}
-.container{padding:40px 20px;}
-h2{color:#FFD700; font-size:32px; margin-bottom:10px;}
-.subtitle{color:#ccc; margin-bottom:30px; font-size:16px;}
-.btn{background:#FFD700; color:#000; padding:15px 35px; text-decoration:none; border-radius:10px; font-weight:bold; margin:10px; display:inline-block; font-size:16px; transition:0.3s;}
-.btn:hover{box-shadow:0 0 20px #FFD700; transform:scale(1.05);}
-.footer{margin-top:80px; padding:20px; color:#555; font-size:14px;}
-</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Kojo SMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0a0a0a; color: #e0e0e0; padding: 30px; }
+      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 20px; }
+        h1 { color: #FFD700; letter-spacing: 1px; }
+      .btn-logout { padding: 10px 20px; background: #FFD700; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+      .btn-logout:hover { box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+        table { width: 100%; border-collapse: collapse; background: #1a1a1a; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
+        th { background: #222; color: #FFD700; text-transform: uppercase; font-size: 12px; }
+        tr:hover { background: #222; }
+      .btn-delete { color: #f87171; text-decoration: none; font-weight: bold; }
+      .btn-delete:hover { text-shadow: 0 0 8px rgba(248, 113, 113, 0.5); }
+      .flash { padding: 12px; margin-bottom: 15px; border-radius: 8px; }
+      .success { background: rgba(0, 255, 0, 0.1); color: #4ade80; border: 1px solid #4ade80; }
+      .danger { background: rgba(255, 0, 0, 0.1); color: #f87171; border: 1px solid #f87171; }
+      .info { background: rgba(0, 150, 255, 0.1); color: #60a5fa; border: 1px solid #60a5fa; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KOJO SMS DASHBOARD</h1>
+        <div>
+            Welcome, <span style="color:#FFD700">{{ user_name }}</span>! 
+            <a href="{{ url_for('logout') }}" class="btn-logout">LOGOUT</a>
+        </div>
+    </div>
 
-<div class="header">
-<h1>KOJO SMS</h1>
-<p>Buy Virtual Numbers & Receive SMS Online</p>
-</div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
 
-<div class="container">
-<h2>Welcome</h2>
-<p class="subtitle">Get numbers from 20+ countries instantly</p>
-<a href="/signup" class="btn">Get Started</a>
-<a href="/login" class="btn">Login</a>
-</div>
-
-<div class="footer">© 2026 KOJO SMS. All rights reserved.</div>
-</body></html>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Joined</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user[0] }}</td>
+                <td>{{ user[1] }}</td>
+                <td>{{ user[2] }}</td>
+                <td>{{ user[3] }}</td>
+                <td><a href="{{ url_for('delete_user', user_id=user[0]) }}" class="btn-delete" onclick="return confirm('Delete this user?')">DELETE</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align:center; padding:20px;">No users yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
