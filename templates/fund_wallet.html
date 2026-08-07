@@ -1,51 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-lg-8">
-    <div class="card shadow-sm border-0">
+  <div class="col-lg-6">
+    <div class="card shadow-lg">
       <div class="card-header bg-success text-white">
         <h3 class="mb-0">Fund Wallet</h3>
       </div>
       <div class="card-body p-4">
         
-        <div class="alert alert-info" role="alert">
-          <h4 class="alert-heading">Current Balance</h4>
-          <p class="display-5 fw-bold mb-0">$0.00</p>
-        </div>
-
-        <h5 class="mt-4 mb-3">Top Up Amount</h5>
-        <div class="row g-3 mb-4">
-          <div class="col-6 col-md-3">
-            <button class="btn btn-outline-primary w-100">$5</button>
-          </div>
-          <div class="col-6 col-md-3">
-            <button class="btn btn-outline-primary w-100">$10</button>
-          </div>
-          <div class="col-6 col-md-3">
-            <button class="btn btn-outline-primary w-100">$20</button>
-          </div>
-          <div class="col-6 col-md-3">
-            <button class="btn btn-outline-primary w-100">$50</button>
+        <div class="card mb-4 text-center" style="background: #1e1e3a; border: 1px solid #00aaff;">
+          <div class="card-body">
+            <p class="text-muted mb-1">Current Balance</p>
+            <h2 class="fw-bold" style="color: #00aaff;">${{ "%.2f"|format(wallet) }}</h2>
           </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Or Enter Custom Amount</label>
-          <input type="number" class="form-control form-control-lg" placeholder="Enter amount in USD">
-        </div>
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Top Up Amount</label>
+            <div class="row g-2">
+              <div class="col-6 col-md-3"><button type="button" class="btn btn-outline-primary w-100">$5</button></div>
+              <div class="col-6 col-md-3"><button type="button" class="btn btn-outline-primary w-100">$10</button></div>
+              <div class="col-6 col-md-3"><button type="button" class="btn btn-outline-primary w-100">$20</button></div>
+              <div class="col-6 col-md-3"><button type="button" class="btn btn-outline-primary w-100">$50</button></div>
+            </div>
+          </div>
 
-        <div class="d-grid mt-4">
-          <button class="btn btn-success btn-lg" disabled>
+          <div class="mb-3">
+            <label class="form-label">Or Enter Custom Amount</label>
+            <input type="number" class="form-control" placeholder="Enter amount in USD">
+          </div>
+
+          <button type="button" class="btn btn-success w-100 btn-lg mb-2" disabled>
             Pay with Paystack - Coming Soon
           </button>
-        </div>
-        
-        <p class="text-center text-muted mt-3">
-          <small>Secure payments powered by Paystack</small>
-        </p>
+          <p class="text-center text-muted small">Secure payments powered by Paystack</p>
+        </form>
 
         <hr>
-        <a href="/user_app" class="btn btn-secondary">← Back to Dashboard</a>
+        <a href="/user_app" class="btn btn-outline-secondary w-100">← Back to Dashboard</a>
+
       </div>
     </div>
   </div>
