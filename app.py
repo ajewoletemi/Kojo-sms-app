@@ -9,16 +9,18 @@ app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey_change_me")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 pool = SimpleConnectionPool(1, 10, DATABASE_URL)
 
-def init_db(): # THIS ADDS is_admin AUTOMATICALLY
+ADMIN_EMAIL = "jedidiah@gmail.com" # <-- CHANGE THIS TO YOUR LOGIN EMAIL
+
+def init_db():
     conn = pool.getconn(); c = conn.cursor()
     c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE")
-    c.execute("UPDATE users SET is_admin = TRUE WHERE id = 1")
-    conn.commit(); release_db(conn)
+    c.execute("UPDATE users SET is_admin = TRUE WHERE email = %s", (ADMIN_EMAIL,))
+    conn.commit(); pool.putconn(conn)
 
 def get_db(): return pool.getconn()
 def release_db(conn): pool.putconn(conn)
 
-init_db() # RUN ON STARTUP
+init_db()
 
 def get_user():
     if 'user_id' not in session: return None
@@ -35,12 +37,8 @@ def landing():
 @app.route('/dashboard')
 def dashboard():
     user = get_user()
-    if not user:
-        flash("Please login first", "info")
-        return redirect(url_for('login'))
-    if not user['is_admin']:
-        flash("Access denied. Admin only.", "danger")
-        return redirect(url_for('logout')) 
+    if not user: flash("Please login first", "info"); return redirect(url_for('login'))
+    if not user['is_admin']: flash("Access denied. Admin only.", "danger"); return redirect(url_for('logout'))
     
     conn = get_db(); c = conn.cursor()
     c.execute("SELECT id, name, email, created_at FROM users ORDER BY id DESC")
@@ -72,11 +70,33 @@ def login():
         if user and check_password_hash(user[3], password):
             session['user_id'], session['user_name'] = user[0], user[1]
             if user[4]: return redirect(url_for('dashboard'))
-            else:
-                flash("Welcome! Admin dashboard is restricted.", "info")
-                return redirect(url_for('logout'))
+            else: flash("Welcome! Admin dashboard is restricted.", "info"); return redirect(url_for('logout'))
         else: flash("Invalid email or password!", "danger")
     return render_template('login.html')
+
+# NEW: PASSWORD RESET FOR ADMIN ONLY
+@app.route('/reset_password/<int:user_id>', methods=['GET', 'POST'])
+def reset_password(user_id):
+    admin = get_user()
+    if not admin or not admin['is_admin']: return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        new_pass = request.form.get('password')
+        conn = get_db(); c = conn.cursor()
+        c.execute("UPDATE users SET password = %s WHERE id = %s", (generate_password_hash(new_pass), user_id))
+        conn.commit(); release_db(conn)
+        flash("Password reset!", "success")
+        return redirect(url_for('dashboard'))
+    
+    return f'''
+    <body style="background:#0a0a0a;color:#e0e0e0;font-family:Segoe UI;padding:50px;text-align:center;">
+    <h2 style="color:#FFD700;">Reset Password</h2>
+    <form method="POST">
+        <input name="password" type="text" placeholder="New Password" style="padding:10px;border-radius:5px;border:1px solid #FFD700;background:#222;color:#fff;">
+        <button style="padding:10px 20px;background:#FFD700;color:#000;border:none;border-radius:5px;font-weight:bold;">RESET</button>
+    </form>
+    </body>
+    '''
 
 @app.route('/logout')
 def logout():
