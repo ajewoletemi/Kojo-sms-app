@@ -5,21 +5,23 @@
     <title>Send SMS - Kojo</title>
     <style>
         body { background: #0D0B1E; color: #e0e0e0; font-family: Segoe UI; padding: 20px; }
-   .card { background: #1A1733; padding: 30px; border-radius: 20px; max-width: 600px; margin: 50px auto; border: 1px solid #2A2744; }
-        h2 { color: #FFD700; margin-bottom: 10px; }
-        p { color: #A0A0C0; margin-bottom: 20px; }
-        label { font-weight: 700; display: block; margin-bottom: 8px; }
-        textarea { width: 100%; background: #0D0B1E; border: 1px solid #2A2744; color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 15px; }
-  .btn-send { background: #FFD700; color: #000; border: none; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 16px; width: 100%; cursor: pointer; }
-        a { color: #FFD700; text-decoration: none; display: block; text-align: center; margin-top: 15px; }
+    .card { background: linear-gradient(135deg, #1A1733 0%, #2A2744 100%); padding: 30px; border-radius: 20px; max-width: 600px; margin: 50px auto; border: 2px solid #FFD700; }
+        h2 { color: #FFD700; margin-bottom: 10px; font-size: 28px; text-align: center; }
+        p { color: #A0A0C0; margin-bottom: 20px; text-align: center; }
+        label { font-weight: 700; display: block; margin-bottom: 8px; color: #FFD700; }
+        textarea { width: 100%; background: #0D0B1E; border: 2px solid #2A2744; color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 15px; }
+        textarea:focus { border-color: #FFD700; outline: none; }
+    .btn-send { background: #FFD700; color: #000; border: none; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 16px; width: 100%; cursor: pointer; }
+        a { color: #FFD700; text-decoration: none; display: block; text-align: center; margin-top: 15px; font-weight: 700; }
       .flash { padding: 12px; margin-bottom: 15px; border-radius: 8px; text-align: center; font-weight: 600; }
-      .success { background: rgba(0, 255, 0, 0.1); color: #4ade80; }
-      .danger { background: rgba(255, 0, 0, 0.1); color: #f87171; }
+      .success { background: rgba(0, 255, 0, 0.1); color: #4ade80; border: 1px solid #4ade80; }
+      .danger { background: rgba(255, 0, 0, 0.1); color: #f87171; border: 1px solid #f87171; }
+      .note { font-size: 13px; color: #888; text-align: center; margin-top: -10px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>Send SMS</h2>
+        <h2>Send International SMS</h2>
         <p>Balance: ${{ "%.2f"|format(wallet) }} | Cost: $0.20 per SMS</p>
         
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -29,13 +31,14 @@
         {% endwith %}
 
         <form method="POST" action="{{ url_for('send_sms_action') }}">
-            <label>Recipients (one per line)</label>
-            <textarea name="numbers" rows="5" placeholder="+2348012345678&#10;+2348098765432" required></textarea>
+            <label>Recipients - One per line</label>
+            <textarea name="numbers" rows="6" placeholder="+1 202 555 0123  USA&#10;+44 7700 900123  UK&#10;+234 801 234 5678  Nigeria&#10;+233 24 123 4567  Ghana" required></textarea>
+            <p class="note">Must include country code. Example: +1 for USA, +44 for UK</p>
             
             <label>Message</label>
-            <textarea name="message" rows="6" placeholder="Type your message here..." required></textarea>
+            <textarea name="message" rows="6" placeholder="Type your message here... Max 160 characters recommended" maxlength="500" required></textarea>
             
-            <button type="submit" class="btn-send">Send SMS</button>
+            <button type="submit" class="btn-send">Send SMS Worldwide</button>
         </form>
         <a href="{{ url_for('user_app') }}">← Back to Dashboard</a>
     </div>
