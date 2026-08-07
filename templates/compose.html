@@ -1,77 +1,19 @@
-<!DOCTYPE html><html><head><title>Compose SMS - KOJO</title>
+<!DOCTYPE html><html><head><title>Send SMS - KOJO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}
-body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh;}
-.topbar{display:flex; justify-content:space-between; align-items:center; padding:20px; position:relative;}
-.menu{background:#FFD700; color:#000; border:none; padding:12px 15px; border-radius:8px; font-size:20px; font-weight:bold; cursor:pointer;}
-.balance-box{background:#1e1e3a; padding:10px 20px; border-radius:10px; border:1px solid #333;}
-.balance-box b{color:#00FF88;}
-.sidebar{position:fixed; left:-250px; top:0; width:250px; height:100%; background:#1e1e3a; border-right:2px solid #FFD700; transition:0.3s; padding:20px; z-index:1000;}
-.sidebar.active{left:0;}
-.sidebar a{display:block; color:#fff; text-decoration:none; padding:15px 10px; border-radius:8px; margin:10px 0;}
-.sidebar a:hover{background:#2a2a4a; color:#FFD700;}
-.overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;}
-.overlay.active{display:block;}
-.container{padding:20px;}
-h2{color:#FFD700; font-size:28px;}
-.subtitle{color:#aaa; margin-bottom:20px;}
-.card{background:rgba(30,30,58,0.8); backdrop-filter:blur(15px); padding:25px; border-radius:15px; border:2px solid #2a2a4a; max-width:700px; margin:0 auto;}
-.card h3{color:#FFD700; margin-bottom:20px; font-size:22px;}
-label{display:block; color:#aaa; margin:15px 0 5px;}
-textarea, input{width:100%; padding:14px; background:#0a0a1a; border:1px solid #2a2a4a; color:#fff; border-radius:8px; font-size:15px;}
-textarea{height:120px;}
-textarea:focus{outline:none; border-color:#FFD700; box-shadow:0 0 10px #FFD700;}
-.note{color:#888; font-size:13px; margin-top:10px;}
-.btn{background:#FFD700; color:#000; padding:14px 40px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:20px; width:100%;}
-.btn:hover{box-shadow:0 0 20px #FFD700;}
-.back-btn{display:inline-block; margin-bottom:20px; color:#FFD700; text-decoration:none; border:1px solid #FFD700; padding:8px 15px; border-radius:8px;}
-</style>
-<script>
-function toggleMenu(){
-document.getElementById('sidebar').classList.toggle('active');
-document.getElementById('overlay').classList.toggle('active');
-}
-</script>
-</head><body>
-
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-
-<div class="sidebar" id="sidebar">
-<h3 style="color:#FFD700; margin-bottom:20px;">KOJO SMS</h3>
-<a href="/dashboard">Dashboard</a>
-<a href="/compose">Compose SMS</a>
-<a href="/fund_wallet">Fund Wallet</a>
-<a href="/logout">Logout</a>
-</div>
-
-<div class="topbar">
-<button class="menu" onclick="toggleMenu()">☰</button>
-<div class="balance-box"><span>BALANCE</span> <b>₦{{ balance }}</b></div>
-</div>
-
-<div class="container">
-<a href="/dashboard" class="back-btn">← Back to Dashboard</a>
-
-<h2>➤ Message Compose</h2>
-<p class="subtitle">Compose and send supported messages.</p>
-
+<style>*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh; padding:20px;}.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;}.back{background:#1e1e3a; color:#FFD700; border:1px solid #2a2a4a; padding:10px 15px; border-radius:8px; text-decoration:none; font-weight:bold;}.balance-box{background:#1e1e3a; padding:10px 20px; border-radius:10px; border:1px solid #333; font-weight:bold;}h1{color:#FFD700; text-align:center; margin-bottom:10px; font-size:28px;}.card{background:rgba(30,30,58,0.8); backdrop-filter:blur(15px); padding:30px; border-radius:15px; border:2px solid #2a2a4a; max-width:600px; margin:20px auto; box-shadow:0 0 30px rgba(255,215,0,0.1);}label{display:block; color:#aaa; margin:15px 0 8px; font-weight:600;}textarea, input{width:100%; padding:14px; background:#0a0a1a; border:1px solid #2a2a4a; color:#fff; border-radius:8px; font-size:15px; outline:none;}textarea:focus, input:focus{border-color:#FFD700;}textarea{resize:vertical; min-height:120px;}.btn{width:100%; background:#FFD700; color:#000; padding:15px; border:none; border-radius:8px; font-weight:bold; font-size:16px; margin-top:20px; cursor:pointer; transition:0.3s;}.btn:hover{box-shadow:0 0 20px #FFD700;}.pricing{background:rgba(255,215,0,0.1); border:1px solid #FFD700; padding:15px; border-radius:8px; margin-bottom:20px; text-align:center; color:#FFD700; font-size:15px;}small{color:#888;}</style></head><body>
+<div class="topbar"><a href="/dashboard" class="back">← Back</a><div class="balance-box">BALANCE: <b>${{ "%.2f"|format(balance) }}</b></div></div>
+<h1>Send SMS</h1>
 <div class="card">
-<h3>Compose SMS</h3>
-<form method="POST" action="/send_sms">
-<label>Recipient numbers</label>
-<textarea name="to_number" placeholder="+1234567890
-+447911123456
-+2348012345678" required></textarea>
-<p class="note">Paste multiple numbers, one per line. Use international format e.g +1, +44, +234</p>
-
+<div class="pricing">💰 Cost: <b>$0.20 per SMS</b>. Put each number on a new line.</div>
+<form action="/send_sms" method="POST">
+<label>To Numbers</label>
+<textarea name="to_number" placeholder="+2348012345678
++2348098765432
++447912345678" required></textarea>
+<small>Example: 1 number per line</small>
 <label>Message</label>
-<textarea name="message" placeholder="Type your message here..." required></textarea>
-
-<p class="note">Note: For best delivery, avoid spam words and links</p>
+<textarea name="message" placeholder="Your message here..." required></textarea>
 <button class="btn">Send SMS</button>
 </form>
-</div>
-</div>
-
-</body></html>
+{% with messages = get_flashed_messages() %}{% for message in messages %}<p style="color:#00FF88; text-align:center; margin-top:15px;">{{ message }}</p>{% endfor %}{% endwith %}
+</div></body></html>
