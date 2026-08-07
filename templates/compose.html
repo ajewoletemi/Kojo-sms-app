@@ -1,43 +1,47 @@
-<!DOCTYPE html><html><head><title>Send SMS - KOJO</title>
+<!DOCTYPE html><html><head><title>Compose SMS - KOJO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{background:#000; color:#fff; font-family:Arial; margin:0;}
-.navbar{background:#0033cc; padding:15px; display:flex; justify-content:space-between;}
-.navbar a{color:#FFD700; text-decoration:none; font-weight:bold; margin-left:15px;}
-.container{padding:30px; max-width:600px; margin:auto;}
-.box{background:#111; padding:30px; border-radius:10px; border:2px solid #0033cc;}
-h2{color:#FFD700;}
-label{display:block; margin-top:15px; color:#FFD700;}
-input, textarea, select{width:100%; padding:12px; margin:8px 0; background:#222; border:1px solid #0033cc; color:#fff; border-radius:5px;}
-button{width:100%; padding:14px; background:#FFD700; color:#000; border:none; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:15px;}
-button:hover{background:#fff;}
+*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}
+body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh; padding:20px;}
+.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
+.menu{background:#FFD700; color:#000; border:none; padding:12px 15px; border-radius:8px; font-size:20px;}
+.balance-box{background:#1e1e3a; padding:10px 20px; border-radius:10px; border:1px solid #333;}
+.balance-box b{color:#00FF88;}
+h2{color:#FFD700; font-size:28px;}
+h2 span{color:#FFD700;}
+.subtitle{color:#aaa; margin-bottom:20px;}
+.card{background:rgba(30,30,58,0.7); backdrop-filter:blur(10px); padding:25px; border-radius:15px; border:1px solid #2a2a4a;}
+.card h3{color:#FFD700; margin-bottom:20px; font-size:22px;}
+label{display:block; color:#aaa; margin:15px 0 5px;}
+textarea, input{width:100%; padding:14px; background:#000; border:1px solid #2a2a4a; color:#fff; border-radius:8px; font-size:15px;}
+textarea{height:120px;}
+.note{color:#888; font-size:13px; margin-top:10px;}
+.btn{background:#FFD700; color:#000; padding:14px 40px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:20px;}
 </style></head><body>
-<div class="navbar">
-<span style="color:#FFD700;">KOJO SMS</span>
-<div>
-<a href="/dashboard">Dashboard</a>
-<a href="/logout">Logout</a>
-</div>
+
+<div class="topbar">
+<button class="menu">☰</button>
+<div class="balance-box"><span>BALANCE</span> <b>$0.00</b></div>
 </div>
 
-<div class="container">
-<div class="box">
-<h2>Send SMS</h2>
-{% with messages = get_flashed_messages() %}{% for message in messages %}<p style="color:#FFD700;">{{ message }}</p>{% endfor %}{% endwith %}
+<h2>➤ Message Compose</h2>
+<p class="subtitle">Compose and send supported messages.</p>
 
+<div class="card">
+<h3>Compose SMS</h3>
 <form method="POST" action="/send_sms">
-<label>From Number</label>
-<select name="from_number" required>
-<option value="">Select a Number</option>
-<!-- You can loop your bought numbers here later -->
-</select>
-
-<label>To Number</label>
-<input type="text" name="to_number" placeholder="+2348012345678" required>
+<label>Recipient numbers</label>
+<textarea name="to_number" placeholder="+1234567890
++447911123456
++2348012345678" required></textarea>
+<p class="note">Paste multiple numbers, one per line. Use international format e.g +1, +44, +234</p>
 
 <label>Message</label>
-<textarea name="message" rows="5" placeholder="Type your message here..." required></textarea>
+<textarea name="message" placeholder="Type your message here..." required></textarea>
 
-<button>Send SMS</button>
+<p class="note">Note: For best delivery, avoid spam words and links</p>
+<button class="btn">Send</button>
 </form>
 </div>
-</div></body></html>
+
+</body></html>
