@@ -1,17 +1,44 @@
 <!DOCTYPE html><html><head><title>Fund Wallet - KOJO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{background:#000; color:#fff; font-family:Arial; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;}
-.box{background:#111; padding:40px; border-radius:10px; border:2px solid #0033cc; width:350px;}
-h2{color:#FFD700; text-align:center;}
-input{width:100%; padding:12px; margin:10px 0; background:#222; border:1px solid #0033cc; color:#fff; border-radius:5px;}
-button{width:100%; padding:12px; background:#FFD700; color:#000; border:none; border-radius:5px; font-weight:bold; cursor:pointer;}
-a{color:#0033cc;}
+*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}
+body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh; padding:20px;}
+.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;}
+.back{background:#1e1e3a; color:#FFD700; border:1px solid #2a2a4a; padding:10px 15px; border-radius:8px; text-decoration:none;}
+.balance-box{background:#1e1e3a; padding:10px 20px; border-radius:10px; border:1px solid #333;}
+.balance-box b{color:#00FF88;}
+h1{color:#FFD700; text-align:center; margin-bottom:5px; text-shadow:0 0 10px #FFD700;}
+.subtitle{text-align:center; color:#aaa; margin-bottom:30px;}
+.card{background:rgba(30,30,58,0.8); backdrop-filter:blur(15px); padding:30px; border-radius:15px; border:2px solid #2a2a4a; max-width:500px; margin:0 auto; box-shadow:0 0 30px rgba(255,215,0,0.15);}
+label{display:block; color:#aaa; margin:15px 0 8px; font-size:14px;}
+input{width:100%; padding:14px; background:#0a0a1a; border:1px solid #2a2a4a; color:#fff; border-radius:8px; font-size:16px;}
+input:focus{outline:none; border-color:#FFD700; box-shadow:0 0 10px #FFD700;}
+.btn{width:100%; background:#FFD700; color:#000; padding:15px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:20px; font-size:16px; transition:0.3s;}
+.btn:hover{box-shadow:0 0 20px #FFD700; transform:scale(1.02);}
+.note{color:#888; font-size:13px; margin-top:15px; text-align:center;}
 </style></head><body>
-<div class="box">
-<h2>Fund Wallet</h2>
-<form method="POST">
-<input type="email" name="email" placeholder="Email for Paystack" required>
-<input type="number" name="amount" placeholder="Amount NGN" required>
-<button>Pay with Paystack</button></form>
-<p style="text-align:center;"><a href="/dashboard">Back to Dashboard</a></p>
-</div></body></html>
+
+<div class="topbar">
+<a href="/dashboard" class="back">← Back</a>
+<div class="balance-box"><span>BALANCE</span> <b>₦{{ balance }}</b></div>
+</div>
+
+<h1>Fund Wallet</h1>
+<p class="subtitle">Add money to your KOJO wallet</p>
+
+<div class="card">
+<form action="/pay" method="POST">
+<label>Email Address</label>
+<input type="email" name="email" placeholder="Enter your email" required>
+
+<label>Amount (NGN)</label>
+<input type="number" name="amount" placeholder="Enter amount" min="100" required>
+
+<button class="btn">Pay with Paystack</button>
+</form>
+<p class="note">Secure payment powered by Paystack. Min: ₦100</p>
+</div>
+
+{% with messages = get_flashed_messages() %}{% for message in messages %}<p style="color:#FFD700; text-align:center; margin-top:15px;">{{ message }}</p>{% endfor %}{% endwith %}
+
+</body></html>
