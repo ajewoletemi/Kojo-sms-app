@@ -5,9 +5,13 @@
     <title>Send SMS - Kojo</title>
     <style>
         body { background: #0D0B1E; color: #e0e0e0; font-family: Segoe UI; padding: 20px; }
-    .card { background: linear-gradient(135deg, #1A1733 0%, #2A2744 100%); padding: 30px; border-radius: 20px; max-width: 600px; margin: 50px auto; border: 2px solid #FFD700; }
+    .card { background: linear-gradient(135deg, #1A1733 0%, #2A2744 100%); padding: 30px; border-radius: 20px; max-width: 650px; margin: 50px auto; border: 2px solid #FFD700; }
         h2 { color: #FFD700; margin-bottom: 10px; font-size: 28px; text-align: center; }
         p { color: #A0A0C0; margin-bottom: 20px; text-align: center; }
+    .number-box { background: #0D0B1E; border: 2px solid #FFD700; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+    .number-box select { width: 100%; background: #1A1733; color: #FFD700; border: 1px solid #2A2744; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+    .validity { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .btn-extend { background: #FFD700; color: #000; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 13px; }
         label { font-weight: 700; display: block; margin-bottom: 8px; color: #FFD700; }
         textarea { width: 100%; background: #0D0B1E; border: 2px solid #2A2744; color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 15px; }
         textarea:focus { border-color: #FFD700; outline: none; }
@@ -31,12 +35,26 @@
         {% endwith %}
 
         <form method="POST" action="{{ url_for('send_sms_action') }}">
+            
+            <div class="number-box">
+                <label>Send From Number</label>
+                <select name="from_number">
+                    <option value="">-- No Number Purchased Yet --</option>
+                    <!-- Later tonight we’ll loop: {% for num in user_numbers %} -->
+                    <!-- <option value="{{ num.phone }}"> {{ num.phone }} [{{ num.days_left }} days left]</option> -->
+                </select>
+                <div class="validity">
+                    <span>Validity: -- days left</span>
+                    <button type="button" class="btn-extend" onclick="alert('Buy a number first')">Extend $5/month</button>
+                </div>
+            </div>
+
             <label>Recipients - One per line</label>
-            <textarea name="numbers" rows="6" placeholder="+1 202 555 0123  USA&#10;+44 7700 900123  UK&#10;+234 801 234 5678  Nigeria&#10;+233 24 123 4567  Ghana" required></textarea>
+            <textarea name="numbers" rows="6" placeholder="+1 202 555 0123  USA&#10;+44 7700 900123  UK&#10;+234 801 234 5678  Nigeria" required></textarea>
             <p class="note">Must include country code. Example: +1 for USA, +44 for UK</p>
             
             <label>Message</label>
-            <textarea name="message" rows="6" placeholder="Type your message here... Max 160 characters recommended" maxlength="500" required></textarea>
+            <textarea name="message" rows="6" placeholder="Type your message here..." maxlength="500" required></textarea>
             
             <button type="submit" class="btn-send">Send SMS Worldwide</button>
         </form>
