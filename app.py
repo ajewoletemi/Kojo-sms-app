@@ -14,7 +14,7 @@ NOWPAYMENTS_API_KEY = os.environ.get('NOWPAYMENTS_API_KEY')
 NGN_TO_USD_RATE = 1500 # ₦15,000 = $10 so $1 = ₦1500
 MIN_FUND_USD = 10 # $10 minimum
 SMS_COST_USD = 0.20 # $0.20 per SMS - Updated for more profit
-DB_PATH = '/data/database.db' # PERMANENT STORAGE
+DB_PATH = 'database.db' # TEMPORARY STORAGE - for free plan
 
 def login_required(f):
     @wraps(f)
