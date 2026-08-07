@@ -1,15 +1,27 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card border-warning mb-4" style="background: #FFD700; color: #000;">
+<!-- WALLET CARD -->
+<div class="card mb-4" style="background: #FFD700; color: #000; border: none;">
   <div class="card-body">
-    <p class="mb-1">WALLET BALANCE</p>
+    <p class="mb-1 fw-bold">WALLET BALANCE</p>
     <h1 class="display-4 fw-bold">${{ "%.2f"|format(wallet) }}</h1>
-    <div class="d-grid gap-2 d-md-flex">
-      <a href="/fund_wallet" class="btn btn-dark">Fund with Card</a>
-      <a href="/fund_btc" class="btn btn-dark">Fund with BTC</a>
+    <div class="d-grid gap-2">
+      <a href="/fund_wallet" class="btn btn-dark btn-lg">Fund with Card</a>
+      <a href="/fund_btc" class="btn btn-dark btn-lg">Fund with BTC</a>
     </div>
   </div>
 </div>
+
+<!-- BUY NUMBER CARD -->
+<div class="card mb-3">
+  <div class="card-body">
+    <h4 class="kojo-yellow">Buy Virtual Number</h4>
+    <p>Get a virtual number to receive SMS Instantly - $5</p>
+    <button class="btn btn-warning" disabled>Coming Soon</button>
+  </div>
+</div>
+
+<!-- SEND SMS CARD -->
 <div class="card mb-3">
   <div class="card-body">
     <h4 class="kojo-yellow">Send SMS</h4>
