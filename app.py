@@ -4,16 +4,18 @@ import psycopg2
 from psycopg2.pool import SimpleConnectionPool
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # change this later
+app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey_change_me")  # Add SECRET_KEY to Render too
 
 # --- DATABASE CONNECTION ---
 DATABASE_URL = os.environ.get("DATABASE_URL")
-# IMPORTANT: Use pooler with pgbouncer=true
-if DATABASE_URL and "pooler.supabase.com" in DATABASE_URL:
-    if "?" not in DATABASE_URL:
-        DATABASE_URL += "?pgbouncer=true&connection_limit=1"
-    elif "pgbouncer" not in DATABASE_URL:
-        DATABASE_URL += "&pgbouncer=true&connection_limit=1"
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set. Add it to Render Environment Variables")
+
+# Add pooler params if using Supabase pooler on port 6543
+if "pooler.supabase.com" in DATABASE_URL and "pgbouncer" not in DATABASE_URL:
+    separator = "&" if "?" in DATABASE_URL else "?"
+    DATABASE_URL += f"{separator}pgbouncer=true&connection_limit=1"
 
 pool = SimpleConnectionPool(1, 10, DATABASE_URL)
 
@@ -33,6 +35,7 @@ def home():
     users = c.fetchall()
     release_db(conn)
     return render_template('index.html', users=users)
+
 
 @app.route('/add_user', methods=['POST'])
 def add_user():
@@ -56,6 +59,7 @@ def add_user():
     
     return redirect(url_for('home'))
 
+
 @app.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
     try:
@@ -70,10 +74,11 @@ def delete_user(user_id):
     
     return redirect(url_for('home'))
 
-# Optional: if you want /signup to work
+
 @app.route('/signup')
 def signup():
     return redirect(url_for('home'))
 
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False) # debug=False for production
