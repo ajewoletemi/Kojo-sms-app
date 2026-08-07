@@ -1,6 +1,6 @@
-Flask
-gunicorn
-psycopg2-binary
-werkzeug
-requests
-twilio
+Flask==3.0.3
+psycopg2-binary==2.9.9
+Werkzeug==3.0.3
+requests==2.32.3
+gunicorn==22.0.0
+twilio==9.3.0
