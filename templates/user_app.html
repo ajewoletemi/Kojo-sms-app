@@ -1,14 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card shadow-sm">
-  <div class="card-body text-center">
-    <h2 class="card-title mb-3">Welcome to Kojo SMS</h2>
-    <p class="lead">Wallet Balance: <strong>${{ "%.2f"|format(wallet) }}</strong></p>
-    
-    <div class="d-grid gap-3 mt-4">
-      <a href="/send_sms" class="btn btn-primary btn-lg">Send SMS</a>
-      <a href="/fund_wallet" class="btn btn-success btn-lg">Fund Wallet</a>
+<div class="card border-warning mb-4" style="background: #FFD700; color: #000;">
+  <div class="card-body">
+    <p class="mb-1">WALLET BALANCE</p>
+    <h1 class="display-4 fw-bold">${{ "%.2f"|format(wallet) }}</h1>
+    <div class="d-grid gap-2 d-md-flex">
+      <a href="/fund_wallet" class="btn btn-dark">Fund with Card</a>
+      <a href="/fund_btc" class="btn btn-dark">Fund with BTC</a>
     </div>
+  </div>
+</div>
+<div class="card mb-3">
+  <div class="card-body">
+    <h4 class="kojo-yellow">Send SMS</h4>
+    <p>Compose and send messages to any number. Cost: <b>$0.20 per SMS</b></p>
+    <a href="/send_sms" class="btn btn-warning">Send SMS</a>
   </div>
 </div>
 {% endblock %}
