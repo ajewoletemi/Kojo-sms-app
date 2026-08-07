@@ -1,24 +1,36 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-  <h2>Send SMS</h2>
-  <p>Wallet Balance: $<strong>{{ wallet }}</strong></p>
-  <p>Cost: $0.20 per SMS</p>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h2 class="card-title">Send SMS</h2>
+    <p class="text-muted">Wallet Balance: <strong>${{ "%.2f"|format(wallet) }}</strong></p>
+    <p class="text-muted">Cost: <strong>$0.20</strong> per SMS</p>
 
-  <form method="POST">
-    <div class="mb-3">
-      <label>From Number</label>
-      <input type="text" class="form-control" value="+17372508034" disabled>
-    </div>
-    <div class="mb-3">
-      <label>Numbers - One per line</label>
-      <textarea name="numbers" class="form-control" rows="5" placeholder="+2348012345678" required></textarea>
-    </div>
-    <div class="mb-3">
-      <label>Message</label>
-      <textarea name="message" class="form-control" rows="4" required></textarea>
-    </div>
-    <button type="submit" class="btn btn-primary">Send SMS</button>
-  </form>
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">From Number</label>
+        <input type="text" class="form-control" name="from_number" value="+17372508034" readonly>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Numbers - One per line</label>
+        <textarea class="form-control" name="numbers" rows="6" placeholder="Enter numbers with country code, one per line:
+
++2348012345678  Nigeria
++233244123456   Ghana  
++254712345678   Kenya
++447911123456   UK
++12025550123    USA" required></textarea>
+        <div class="form-text">Must include country code. Ex: +234, +233, +254, +1, +44</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Message</label>
+        <textarea class="form-control" name="message" rows="4" placeholder="Type your message here..." required></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Send SMS</button>
+    </form>
+  </div>
 </div>
 {% endblock %}
