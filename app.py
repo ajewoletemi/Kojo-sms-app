@@ -8,12 +8,13 @@ from twilio.rest import Client
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY")
+
 DATABASE_URL = os.environ.get("DATABASE_URL")
 PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
 BTC_ADDRESS = os.environ.get("BTC_ADDRESS")
 TWILIO_SID = os.environ.get("TWILIO_ACCOUNT_SID") 
 TWILIO_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN") 
-TWILIO_FROM = os.environ.get("TWILIO_PHONE_NUMBER") # <-- FIXED TO MATCH YOUR RENDER
+TWILIO_FROM = os.environ.get("TWILIO_PHONE_NUMBER")
 
 pool = SimpleConnectionPool(1, 20, dsn=DATABASE_URL)
 
