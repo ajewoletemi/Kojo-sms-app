@@ -1,50 +1,10 @@
 <!DOCTYPE html><html><head><title>Dashboard - KOJO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}
-body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh; padding:20px;}
-.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;}
-.menu{background:#FFD700; color:#000; border:none; padding:12px 15px; border-radius:8px; font-size:20px; font-weight:bold;}
-.balance-box{background:#1e1e3a; padding:10px 20px; border-radius:10px; border:1px solid #333;}
-.balance-box span{color:#aaa;}
-.balance-box b{color:#00FF88; font-size:18px;}
-h1{color:#FFD700; text-align:center; margin-bottom:5px;}
-.subtitle{text-align:center; color:#aaa; margin-bottom:30px;}
-.card{background:rgba(30,30,58,0.7); backdrop-filter:blur(10px); padding:25px; border-radius:15px; border:1px solid #2a2a4a; margin-bottom:20px;}
-.card h3{color:#FFD700; margin-bottom:10px;}
-.balance{color:#00FF88; font-size:32px; font-weight:bold; margin-bottom:15px;}
-.btn{background:#FFD700; color:#000; padding:12px 25px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; text-decoration:none; display:inline-block;}
-.btn:hover{box-shadow:0 0 15px #FFD700;}
-</style></head><body>
-
-<div class="topbar">
-<button class="menu">☰</button>
-<div class="balance-box"><span>BALANCE</span> <b>₦{{ balance }}</b></div>
-</div>
-
-<h1>Welcome, {{ name }}</h1>
-<p class="subtitle">Manage your SMS and wallet</p>
-
-<div class="card">
-<h3>Wallet Balance</h3>
-<div class="balance">₦{{ balance }}</div>
-<a href="/fund_wallet" class="btn">Fund Wallet</a>
-</div>
-
-<div class="card">
-<h3>Buy Virtual Number</h3>
-<p>Get a virtual number to receive SMS Instantly - $5</p>
-<br>
-<a href="#" class="btn">Buy Number</a>
-</div>
-
-<div class="card">
-<h3>Send SMS</h3>
-<p>Compose and send messages to any number</p>
-<br>
-<a href="/compose" class="btn">Send SMS</a>
-</div>
-
-{% with messages = get_flashed_messages() %}{% for message in messages %}<p style="color:#FFD700; text-align:center;">{{ message }}</p>{% endfor %}{% endwith %}
-
+<style>*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial;}body{background:linear-gradient(135deg, #0a0a1a, #1a1a2e); color:#fff; min-height:100vh; padding:20px;}.header{display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;}.logo{font-size:28px; font-weight:bold; color:#FFD700; text-shadow:0 0 10px #FFD700;}.logout{color:#aaa; text-decoration:none;}.balance-card{background:linear-gradient(135deg, #FFD700, #FFA500); color:#000; padding:25px; border-radius:15px; margin-bottom:30px; box-shadow:0 0 30px rgba(255,215,0,0.3);}.balance-card h2{font-size:14px; opacity:0.8;}.balance-card h1{font-size:36px; margin:10px 0;}.btn-row{display:flex; gap:10px;}.btn{background:#000; color:#FFD700; padding:10px 15px; border-radius:8px; text-decoration:none; font-weight:bold;}.card{background:rgba(30,30,58,0.8); backdrop-filter:blur(15px); padding:25px; border-radius:15px; border:1px solid #2a2a4a; margin-bottom:20px;}.card h3{color:#FFD700; margin-bottom:10px;}.card-btn{background:#FFD700; color:#000; padding:12px 20px; border-radius:8px; text-decoration:none; font-weight:bold; display:inline-block; margin-top:10px;}</style></head><body>
+<div class="header"><div class="logo">KOJO</div><a href="/logout" class="logout">Logout</a></div>
+<div class="balance-card"><h2>WALLET BALANCE</h2><h1>${{ "%.2f"|format(balance) }}</h1>
+<div class="btn-row"><a href="/fund_wallet" class="btn">Fund with Card</a><a href="/fund_btc" class="btn">Fund with BTC</a></div></div>
+<div class="card"><h3>Buy Virtual Number</h3><p>Get a virtual number to receive SMS Instantly - $5</p><a href="#" class="card-btn">Buy Number</a></div>
+<div class="card"><h3>Send SMS</h3><p>Compose and send messages to any number. Cost: $0.01 per SMS</p><a href="/compose" class="card-btn">Send SMS</a></div>
+{% with messages = get_flashed_messages() %}{% for message in messages %}<p style="color:#00FF88; text-align:center;">{{ message }}</p>{% endfor %}{% endwith %}
 </body></html>
