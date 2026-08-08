@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Inbox{% endblock %}
+{% block content %}
+<div class="nav">
+    <a href="{{ url_for('dashboard') }}">← Back</a>
+    <span class="balance-badge">BALANCE: ${{ "%.2f"|format(wallet) }}</span>
+</div>
+
+<h2 style="color:var(--yellow); margin-bottom:20px;">📥 Inbox</h2>
+
+{% if messages %}
+    {% for m in messages %}
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <strong>{{ m.from_number }}</strong>
+            <span class="muted" style="font-size:12px;">{{ m.created_at.strftime('%d %b %H:%M') }}</span>
+        </div>
+        <div style="color:#ddd;">{{ m.body }}</div>
+        <div class="muted" style="font-size:12px; margin-top:6px;">To: {{ m.to_number }}</div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card">
+        <p class="muted">No received messages yet.</p>
+    </div>
+{% endif %}
+{% endblock %}
