@@ -10,7 +10,7 @@
 
 {% if messages %}
     {% for m in messages %}
-    <div class="card">
+    <div class="card" style="{% if m.read == false %}border-left: 4px solid var(--yellow);{% endif %}">
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
             <strong style="color:var(--yellow);">{{ m.from_number }}</strong>
             <span class="muted" style="font-size:12px;">
@@ -19,15 +19,19 @@
                 {% endif %}
             </span>
         </div>
-        <div style="color:#ddd; margin-bottom:6px;">
+        <div style="color:#ddd; margin-bottom:10px; white-space: pre-wrap;">
             {{ m.message or m.body or '—' }}
         </div>
-        <div class="muted" style="font-size:12px;">
-            To: {{ m.to_number }}
-            {% if m.read == false %}
-                · <span style="color:#ffcc00;">Unread</span>
-            {% endif %}
+        <div class="muted" style="font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+            <span>To: {{ m.to_number }}</span>
+            <a href="{{ url_for('send_sms') }}?to={{ m.from_number }}" 
+               style="color:var(--yellow); text-decoration:none; font-weight:bold;">
+               Reply →
+            </a>
         </div>
+        {% if m.read == false %}
+            <div style="margin-top:6px; color:#ffcc00; font-size:12px; font-weight:bold;">● Unread</div>
+        {% endif %}
     </div>
     {% endfor %}
 {% else %}
