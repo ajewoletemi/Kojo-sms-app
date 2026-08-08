@@ -12,11 +12,12 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
+from supabase import create_client, Client
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.environ.get("SECRET_KEY") or "change-this-in-production"
 
-# Database (Supabase / Postgres)
+# Database (Supabase / Postgres via SQLAlchemy)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
@@ -28,6 +29,13 @@ TWILIO_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE = os.environ.get("TWILIO_PHONE_NUMBER")
 BTC_ADDRESS = os.environ.get("BITCOIN_WALLET_ADDRESS")
 
+# Supabase Client (for user_numbers + inbox tables)
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")  # service_role key
+supabase: Client = None
+if SUPABASE_URL and SUPABASE_KEY:
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 COST_PER_SMS = 0.20          # USD
 COST_VIRTUAL_NUMBER = 5.00   # USD
 NGN_TO_USD_RATE = 1500       # ₦1500 = $1  →  ₦15,000 = $10
@@ -37,44 +45,23 @@ twilio_client = None
 if TWILIO_SID and TWILIO_TOKEN:
     twilio_client = Client(TWILIO_SID, TWILIO_TOKEN)
 
-# ========== MODELS ==========
+# ========== MODELS (still used for users, transactions, btc) ==========
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    wallet = db.Column(db.Float, default=0.0)          # always in USD
-    role = db.Column(db.String(20), default="user")    # user / admin
+    wallet = db.Column(db.Float, default=0.0)
+    role = db.Column(db.String(20), default="user")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    numbers = db.relationship("VirtualNumber", backref="owner", lazy=True)
-    messages = db.relationship("Message", backref="user", lazy=True)
     transactions = db.relationship("Transaction", backref="user", lazy=True)
-
-class VirtualNumber(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    phone_number = db.Column(db.String(20), unique=True, nullable=False)
-    twilio_sid = db.Column(db.String(64))
-    active = db.Column(db.Boolean, default=True)
-    purchased_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    direction = db.Column(db.String(10))          # inbound / outbound
-    from_number = db.Column(db.String(20))
-    to_number = db.Column(db.String(20))
-    body = db.Column(db.Text)
-    status = db.Column(db.String(50), default="queued")
-    cost = db.Column(db.Float, default=0.0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    type = db.Column(db.String(30))               # fund_paystack, fund_btc, buy_number, send_sms
-    amount = db.Column(db.Float)                  # always USD
+    type = db.Column(db.String(30))
+    amount = db.Column(db.Float)
     status = db.Column(db.String(20), default="pending")
     reference = db.Column(db.String(100))
     meta = db.Column(db.Text)
@@ -84,7 +71,7 @@ class BTCRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     amount_usd = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(20), default="pending")  # pending / approved / rejected
+    status = db.Column(db.String(20), default="pending")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user = db.relationship("User", backref="btc_requests")
 
@@ -185,17 +172,25 @@ def logout():
 @login_required
 def dashboard():
     user = get_current_user()
-    numbers = VirtualNumber.query.filter_by(user_id=user.id, active=True).all()
-    recent_msgs = Message.query.filter_by(user_id=user.id).order_by(Message.created_at.desc()).limit(5).all()
+
+    # Get numbers from Supabase user_numbers table
+    numbers = []
+    if supabase:
+        try:
+            res = supabase.table("user_numbers").select("*").eq("user_id", str(user.id)).execute()
+            numbers = res.data or []
+        except Exception as e:
+            print("Error fetching numbers:", e)
+
     return render_template(
         "user_app.html",
         user=user,
         wallet=user.wallet,
         numbers=numbers,
-        recent_msgs=recent_msgs
+        recent_msgs=[]
     )
 
-# ========== FUND WITH PAYSTACK (NGN → USD) ==========
+# ========== FUND WITH PAYSTACK ==========
 @app.route("/fund_wallet", methods=["GET", "POST"])
 @login_required
 def fund_wallet():
@@ -231,7 +226,7 @@ def fund_wallet():
         }
         data = {
             "email": user.email,
-            "amount": int(amount_ngn * 100),  # kobo
+            "amount": int(amount_ngn * 100),
             "currency": "NGN",
             "reference": reference,
             "metadata": {
@@ -332,7 +327,7 @@ def fund_btc():
         wallet=user.wallet
     )
 
-# ========== BUY VIRTUAL NUMBER ==========
+# ========== BUY VIRTUAL NUMBER (UPDATED - uses user_numbers table) ==========
 @app.route("/buy_number", methods=["GET", "POST"])
 @login_required
 def buy_number():
@@ -341,6 +336,10 @@ def buy_number():
     if request.method == "POST":
         if not twilio_client:
             flash("Twilio is not configured", "danger")
+            return redirect(url_for("buy_number"))
+
+        if not supabase:
+            flash("Supabase is not configured", "danger")
             return redirect(url_for("buy_number"))
 
         if user.wallet < COST_VIRTUAL_NUMBER:
@@ -356,18 +355,26 @@ def buy_number():
 
             number_to_buy = available[0].phone_number
 
+            # Buy the number on Twilio
             incoming = twilio_client.incoming_phone_numbers.create(
                 phone_number=number_to_buy,
                 sms_url=url_for("twilio_incoming", _external=True),
                 sms_method="POST"
             )
 
+            # Deduct from wallet
             user.wallet -= COST_VIRTUAL_NUMBER
-            vn = VirtualNumber(
-                user_id=user.id,
-                phone_number=incoming.phone_number,
-                twilio_sid=incoming.sid
-            )
+            db.session.commit()
+
+            # Insert into Supabase user_numbers table
+            supabase.table("user_numbers").insert({
+                "user_id": str(user.id),
+                "phone_number": incoming.phone_number,
+                "twilio_sid": incoming.sid,
+                "country": country
+            }).execute()
+
+            # Log transaction
             tx = Transaction(
                 user_id=user.id,
                 type="buy_number",
@@ -376,14 +383,14 @@ def buy_number():
                 reference=incoming.sid,
                 meta=incoming.phone_number
             )
-            db.session.add_all([vn, tx])
+            db.session.add(tx)
             db.session.commit()
 
             flash(f"Successfully purchased {incoming.phone_number}!", "success")
             return redirect(url_for("my_numbers"))
 
         except Exception as e:
-            flash(f"Twilio error: {str(e)}", "danger")
+            flash(f"Error: {str(e)}", "danger")
 
     return render_template("buy_number.html", cost=COST_VIRTUAL_NUMBER, wallet=user.wallet)
 
@@ -391,7 +398,15 @@ def buy_number():
 @login_required
 def my_numbers():
     user = get_current_user()
-    numbers = VirtualNumber.query.filter_by(user_id=user.id).order_by(VirtualNumber.purchased_at.desc()).all()
+    numbers = []
+    if supabase:
+        try:
+            res = supabase.table("user_numbers").select("*").eq("user_id", str(user.id)).order("created_at", desc=True).execute()
+            numbers = res.data or []
+        except Exception as e:
+            print("Error fetching numbers:", e)
+            flash("Could not load numbers", "danger")
+
     return render_template("my_numbers.html", numbers=numbers, wallet=user.wallet)
 
 # ========== SEND SMS ==========
@@ -399,7 +414,15 @@ def my_numbers():
 @login_required
 def send_sms():
     user = get_current_user()
-    numbers = VirtualNumber.query.filter_by(user_id=user.id, active=True).all()
+
+    # Get user's numbers from Supabase
+    numbers = []
+    if supabase:
+        try:
+            res = supabase.table("user_numbers").select("*").eq("user_id", str(user.id)).execute()
+            numbers = res.data or []
+        except:
+            pass
 
     if request.method == "POST":
         if not twilio_client:
@@ -428,26 +451,9 @@ def send_sms():
                     from_=from_number,
                     to=num
                 )
-                db.session.add(Message(
-                    user_id=user.id,
-                    direction="outbound",
-                    from_number=from_number,
-                    to_number=num,
-                    body=message,
-                    status=msg.status,
-                    cost=COST_PER_SMS
-                ))
                 success_count += 1
             except Exception as e:
-                db.session.add(Message(
-                    user_id=user.id,
-                    direction="outbound",
-                    from_number=from_number,
-                    to_number=num,
-                    body=message,
-                    status=f"failed: {str(e)[:80]}",
-                    cost=0
-                ))
+                print(f"Failed to send to {num}: {e}")
 
         user.wallet -= success_count * COST_PER_SMS
         db.session.add(Transaction(
@@ -469,42 +475,65 @@ def send_sms():
         cost_per_sms=COST_PER_SMS
     )
 
-# ========== INBOX & SENT ==========
+# ========== INBOX (reads from new inbox table) ==========
 @app.route("/inbox")
 @login_required
 def inbox():
     user = get_current_user()
-    messages = Message.query.filter_by(user_id=user.id, direction="inbound")\
-        .order_by(Message.created_at.desc()).limit(100).all()
+    messages = []
+    if supabase:
+        try:
+            res = supabase.table("inbox")\
+                .select("*")\
+                .eq("user_id", str(user.id))\
+                .order("created_at", desc=True)\
+                .limit(100)\
+                .execute()
+            messages = res.data or []
+        except Exception as e:
+            print("Inbox error:", e)
+
     return render_template("inbox.html", messages=messages, wallet=user.wallet)
 
 @app.route("/sent")
 @login_required
 def sent_messages():
     user = get_current_user()
-    messages = Message.query.filter_by(user_id=user.id, direction="outbound")\
-        .order_by(Message.created_at.desc()).limit(100).all()
-    return render_template("sent.html", messages=messages, wallet=user.wallet)
+    # For now we keep sent messages simple (you can expand later)
+    return render_template("sent.html", messages=[], wallet=user.wallet)
 
-# Twilio incoming webhook
+# ========== TWILIO INCOMING WEBHOOK (UPDATED - uses inbox table) ==========
 @app.route("/twilio/incoming", methods=["POST"])
 def twilio_incoming():
     from_number = request.form.get("From")
     to_number = request.form.get("To")
     body = request.form.get("Body", "")
+    sms_sid = request.form.get("MessageSid", "")
 
-    vn = VirtualNumber.query.filter_by(phone_number=to_number, active=True).first()
-    if vn:
-        db.session.add(Message(
-            user_id=vn.user_id,
-            direction="inbound",
-            from_number=from_number,
-            to_number=to_number,
-            body=body,
-            status="received"
-        ))
-        db.session.commit()
+    if supabase:
+        try:
+            # Find owner of the number
+            result = supabase.table("user_numbers")\
+                .select("user_id")\
+                .eq("phone_number", to_number)\
+                .execute()
 
+            if result.data:
+                user_id = result.data[0]["user_id"]
+
+                # Save to inbox table
+                supabase.table("inbox").insert({
+                    "user_id": user_id,
+                    "from_number": from_number,
+                    "to_number": to_number,
+                    "message": body,
+                    "sms_sid": sms_sid,
+                    "read": False
+                }).execute()
+        except Exception as e:
+            print("Twilio incoming error:", str(e))
+
+    # Always return empty TwiML so Twilio is happy
     resp = MessagingResponse()
     return str(resp)
 
