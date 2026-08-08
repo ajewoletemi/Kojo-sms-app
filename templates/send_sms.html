@@ -1,29 +1,38 @@
 {% extends "base.html" %}
+{% block title %}Send SMS{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between mb-3">
-  <a href="/user_app" class="btn btn-outline-warning">← Back</a>
-  <span class="badge bg-dark p-2">BALANCE: ${{ "%.2f"|format(wallet) }}</span>
+<div class="nav">
+    <a href="{{ url_for('dashboard') }}">← Back</a>
+    <span class="balance-badge">BALANCE: ${{ "%.2f"|format(wallet) }}</span>
 </div>
+
+<h2 style="color:var(--yellow); margin-bottom:20px;">Send SMS</h2>
+
 <div class="card">
-  <div class="card-body">
-    <h2 class="text-center kojo-yellow mb-3">Send SMS</h2>
-    <div class="alert border-warning" style="background: rgba(255,215,0,0.1);">
-      💰 Cost: <b>$0.20 per SMS</b>. Put each number on a new line.
+    <div style="background:#2a2200; border:1px solid var(--yellow); border-radius:10px; padding:12px; margin-bottom:20px; font-size:14px;">
+        💰 Cost: ${{ cost_per_sms }} per SMS. Put each number on a new line.
     </div>
-    <form method="post">
-      <div class="mb-3">
-        <label class="form-label">To Numbers</label>
-        <textarea name="numbers" class="form-control bg-dark text-white" rows="4" placeholder="+2348012345678
-+2348098765432
-+447912345678"></textarea>
-        <small class="text-muted">Example: 1 number per line</small>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Message</label>
-        <textarea name="message" class="form-control bg-dark text-white" rows="4" placeholder="Your message here..."></textarea>
-      </div>
-      <button type="submit" class="btn btn-warning w-100 btn-lg">Send SMS</button>
+
+    <form method="POST">
+        <label>From Number</label>
+        <select name="from_number">
+            {% if numbers %}
+                {% for n in numbers %}
+                    <option value="{{ n.phone_number }}">{{ n.phone_number }}</option>
+                {% endfor %}
+            {% else %}
+                <option value="">Using default Twilio number</option>
+            {% endif %}
+        </select>
+
+        <label>To Numbers</label>
+        <textarea name="recipients" rows="5" placeholder="+2348012345678&#10;+447911234567&#10;+1234567890" required></textarea>
+        <p class="muted" style="margin-top:-8px; margin-bottom:16px;">Example: 1 number per line (international format)</p>
+
+        <label>Message</label>
+        <textarea name="message" rows="4" placeholder="Your message here..." required></textarea>
+
+        <button type="submit" class="btn">Send SMS</button>
     </form>
-  </div>
 </div>
 {% endblock %}
