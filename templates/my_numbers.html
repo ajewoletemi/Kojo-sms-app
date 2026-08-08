@@ -11,11 +11,20 @@
 {% if numbers %}
     {% for n in numbers %}
     <div class="card">
-        <div style="font-size:18px; font-weight:600;">{{ n.phone_number }}</div>
-        <div class="muted" style="margin-top:4px;">
-            Purchased: {{ n.purchased_at.strftime('%Y-%m-%d') if n.purchased_at else '—' }}
-            · {{ 'Active' if n.active else 'Inactive' }}
+        <div style="font-size:18px; font-weight:600; color:var(--yellow);">
+            {{ n.phone_number }}
         </div>
+        <div class="muted" style="margin-top:6px;">
+            Country: {{ n.country or '—' }}
+            {% if n.created_at %}
+                · Purchased: {{ n.created_at[:10] }}
+            {% endif %}
+        </div>
+        {% if n.twilio_sid %}
+        <div class="muted" style="font-size:12px; margin-top:4px;">
+            SID: {{ n.twilio_sid[:20] }}...
+        </div>
+        {% endif %}
     </div>
     {% endfor %}
 {% else %}
