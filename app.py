@@ -356,16 +356,15 @@ def buy_number():
 
             incoming = twilio_client.incoming_phone_numbers.create(
                 phone_number=number_to_buy,
-                sms_url=url_for("twilio_incoming", _external=True), # Auto webhook
+                sms_url=url_for("twilio_incoming", _external=True),
                 sms_method="POST"
             )
 
             user.wallet -= COST_VIRTUAL_NUMBER
             db.session.commit()
 
-            # Save to Supabase
             supabase.table("user_numbers").insert({
-                "user_id": str(user.id), # Must be string
+                "user_id": str(user.id),
                 "phone_number": incoming.phone_number,
                 "twilio_sid": incoming.sid,
                 "country": country
@@ -410,6 +409,8 @@ def my_numbers():
 @login_required
 def send_sms():
     user = get_current_user()
+
+    to_prefill = request.args.get("to", "") # <-- NEW: for Reply button from inbox
 
     numbers = []
     if supabase:
@@ -467,7 +468,8 @@ def send_sms():
         "send_sms.html",
         wallet=user.wallet,
         numbers=numbers,
-        cost_per_sms=COST_PER_SMS
+        cost_per_sms=COST_PER_SMS,
+        to_prefill=to_prefill # <-- NEW: pass to template
     )
 
 # ========== INBOX ==========
@@ -506,7 +508,6 @@ def twilio_incoming():
 
     if supabase:
         try:
-            # Find who owns this number
             result = supabase.table("user_numbers")\
                .select("user_id")\
                .eq("phone_number", to_number)\
@@ -515,14 +516,13 @@ def twilio_incoming():
             if result.data:
                 user_id = result.data[0]["user_id"]
 
-                # Save to inbox
                 supabase.table("inbox").insert({
                     "user_id": user_id,
                     "from_number": from_number,
                     "to_number": to_number,
                     "message": body,
                     "sms_sid": sms_sid,
-                    "read": False # For unread badge later
+                    "read": False
                 }).execute()
         except Exception as e:
             print("Twilio incoming error:", str(e))
