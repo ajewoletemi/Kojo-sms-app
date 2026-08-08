@@ -91,7 +91,7 @@ def login_required(f):
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if session.get("role") != "admin":
+        if session.get("role")!= "admin":
             flash("Admin access required", "danger")
             return redirect(url_for("dashboard"))
         return f(*args, **kwargs)
@@ -356,15 +356,16 @@ def buy_number():
 
             incoming = twilio_client.incoming_phone_numbers.create(
                 phone_number=number_to_buy,
-                sms_url=url_for("twilio_incoming", _external=True),
+                sms_url=url_for("twilio_incoming", _external=True), # Auto webhook
                 sms_method="POST"
             )
 
             user.wallet -= COST_VIRTUAL_NUMBER
             db.session.commit()
 
+            # Save to Supabase
             supabase.table("user_numbers").insert({
-                "user_id": str(user.id),
+                "user_id": str(user.id), # Must be string
                 "phone_number": incoming.phone_number,
                 "twilio_sid": incoming.sid,
                 "country": country
@@ -478,11 +479,11 @@ def inbox():
     if supabase:
         try:
             res = supabase.table("inbox")\
-                .select("*")\
-                .eq("user_id", str(user.id))\
-                .order("created_at", desc=True)\
-                .limit(100)\
-                .execute()
+               .select("*")\
+               .eq("user_id", str(user.id))\
+               .order("created_at", desc=True)\
+               .limit(100)\
+               .execute()
             messages = res.data or []
         except Exception as e:
             print("Inbox error:", e)
@@ -505,21 +506,23 @@ def twilio_incoming():
 
     if supabase:
         try:
+            # Find who owns this number
             result = supabase.table("user_numbers")\
-                .select("user_id")\
-                .eq("phone_number", to_number)\
-                .execute()
+               .select("user_id")\
+               .eq("phone_number", to_number)\
+               .execute()
 
             if result.data:
                 user_id = result.data[0]["user_id"]
 
+                # Save to inbox
                 supabase.table("inbox").insert({
                     "user_id": user_id,
                     "from_number": from_number,
                     "to_number": to_number,
                     "message": body,
                     "sms_sid": sms_sid,
-                    "read": False
+                    "read": False # For unread badge later
                 }).execute()
         except Exception as e:
             print("Twilio incoming error:", str(e))
@@ -541,7 +544,7 @@ def admin():
 @admin_required
 def approve_btc(req_id):
     req = BTCRequest.query.get_or_404(req_id)
-    if req.status != "pending":
+    if req.status!= "pending":
         flash("Already processed", "warning")
         return redirect(url_for("admin"))
 
