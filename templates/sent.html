@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Sent Messages{% endblock %}
+{% block content %}
+<div class="nav">
+    <a href="{{ url_for('dashboard') }}">← Back</a>
+    <span class="balance-badge">BALANCE: ${{ "%.2f"|format(wallet) }}</span>
+</div>
+
+<h2 style="color:var(--yellow); margin-bottom:20px;">📤 Sent Messages</h2>
+
+{% if messages %}
+    {% for m in messages %}
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <strong>To: {{ m.to_number }}</strong>
+            <span class="muted" style="font-size:12px;">{{ m.created_at.strftime('%d %b %H:%M') }}</span>
+        </div>
+        <div style="color:#ddd;">{{ m.body }}</div>
+        <div class="muted" style="font-size:12px; margin-top:6px;">
+            Status: {{ m.status }} · Cost: ${{ "%.2f"|format(m.cost) }}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card">
+        <p class="muted">No sent messages yet.</p>
+    </div>
+{% endif %}
+{% endblock %}
