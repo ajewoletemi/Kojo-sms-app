@@ -1,108 +1,235 @@
-/* KOJO BRANDING - FULL CSS */
-body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 20px;
+/* ===== KOJO SMS - Global Styles ===== */
+:root {
+    --bg: #0b0b0b;
+    --card: #161616;
+    --card-border: #2a2a2a;
+    --yellow: #ffcc00;
+    --yellow-hover: #e6b800;
+    --yellow-dark: #c9a000;
+    --text: #ffffff;
+    --muted: #999999;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --info: #3b82f6;
 }
 
-/* LOGIN / SIGNUP BOX */
-.login-box {
-    background: white;
-    padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    width: 100%;
-    max-width: 380px;
-    text-align: center;
-}
-.login-box h2 {
-    color: #667eea;
-    margin-bottom: 10px;
-    font-weight: 700;
-    font-size: 28px;
-}
-.login-box p {
-    color: #666;
-    margin-bottom: 20px;
-    font-size: 14px;
-}
-.login-box input {
-    width: 100%;
-    padding: 14px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+* {
     box-sizing: border-box;
-    font-size: 15px;
+    margin: 0;
+    padding: 0;
 }
-.login-box button {
-    width: 100%;
-    padding: 14px;
-    background: #667eea;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 10px;
-    transition: 0.3s;
-}
-.login-box button:hover {
-    background: #764ba2;
-}
-.login-box a { 
-    color: #667eea; 
-    text-decoration: none; 
-    font-weight: 600;
-}
-.login-box a:hover { text-decoration: underline; }
 
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
 
-/* DASHBOARD / INDEX BOX - PUT THIS BELOW LOGIN STYLE */
-.dashboard-box {
-    background: white;
-    padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 650px;
-    margin: 50px auto;
-    text-align: center;
+.container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
 }
-.dashboard-box h2 {
-    color: #667eea;
-    font-weight: 700;
-    margin-bottom: 10px;
-}
+
+/* Cards */
 .card {
-    background: #f8f9fa;
-    padding: 25px;
-    border-radius: 10px;
-    margin: 20px 0;
-    text-align: left;
-    border-left: 4px solid #667eea;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
 }
-.card h3 {
-    color: #333;
-    margin-top: 0;
+
+.yellow-card {
+    background: linear-gradient(135deg, #ffcc00 0%, #e6b800 100%);
+    color: #111;
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(255, 204, 0, 0.15);
 }
-.card button {
-    padding: 12px 25px;
-    background: #667eea;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
+
+/* Typography */
+.logo {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--yellow);
+    letter-spacing: -0.5px;
+}
+
+h1, h2, h3 {
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.muted {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* Navigation */
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 20px;
+}
+
+.balance-badge {
+    background: #1f1f1f;
+    color: var(--success);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
     font-weight: 600;
-    cursor: pointer;
-    transition: 0.3s;
 }
-.card button:hover {
-    background: #764ba2;
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    width: 100%;
+    background: var(--yellow);
+    color: #111;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    background: var(--yellow-hover);
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-dark {
+    background: #111;
+    color: var(--yellow);
+    border: 1px solid var(--yellow);
+}
+
+.btn-dark:hover {
+    background: #222;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--yellow);
+    border: 1px solid var(--yellow);
+}
+
+.btn-outline:hover {
+    background: rgba(255, 204, 0, 0.1);
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* Forms */
+label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 11px;
+    border: 1px solid #333;
+    background: #111;
+    color: #fff;
+    font-size: 15px;
+    margin-bottom: 14px;
+    transition: border-color 0.2s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--yellow);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Flash messages */
+.flash {
+    padding: 13px 16px;
+    border-radius: 11px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.flash.success {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.flash.danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.flash.info {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.flash.warning {
+    background: rgba(234, 179, 8, 0.15);
+    color: #facc15;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+/* Links */
+a {
+    color: var(--yellow);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Utility */
+.text-center { text-align: center; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mb-3 { margin-bottom: 12px; }
+
+/* Mobile polish */
+@media (max-width: 480px) {
+    .container {
+        padding: 12px;
+    }
+    
+    .yellow-card {
+        padding: 18px;
+    }
 }
