@@ -1,85 +1,31 @@
 {% extends "base.html" %}
+{% block title %}Fund with Card{% endblock %}
 {% block content %}
-<style>
-body { background: #0a0a1a; color: #fff; }
-.fund-card {
-  background: #13132b; 
-  border: 1px solid #2a2a4a; 
-  border-radius: 20px;
-  padding: 25px;
-}
-.balance-box {
-  background: #0a0a1a;
-  border: 2px solid #FFD700;
-  border-radius: 16px;
-  padding: 20px;
-  text-align: center;
-  margin-bottom: 25px;
-}
-.balance-box p { color: #b0b0b0; margin-bottom: 5px; }
-.balance-box h2 { color: #FFD700; font-size: 2.8rem; font-weight: 900; text-shadow: 0 0 15px #FFD700; }
-.btn-amount {
-  background: transparent;
-  border: 1px solid #FFD700;
-  color: #FFD700;
-  font-weight: bold;
-  border-radius: 12px;
-  padding: 10px;
-}
-.btn-amount:hover { background: #FFD700; color: #000; }
-.btn-add {
-  background: #FFD700;
-  color: #000;
-  font-weight: 900;
-  border: none;
-  border-radius: 12px;
-  padding: 14px;
-  font-size: 16px;
-}
-.btn-add:hover { background: #ffea00; box-shadow: 0 0 20px #FFD700; color: #000; }
-.btn-back {
-  background: transparent;
-  border: 1px solid #555;
-  color: #b0b0b0;
-  border-radius: 12px;
-  padding: 10px;
-}
-input.form-control {
-  background: #0a0a1a;
-  border: 1px solid #2a2a4a;
-  color: #fff;
-  border-radius: 10px;
-}
-input.form-control:focus { background: #0a0a1a; border-color: #FFD700; color: #fff; box-shadow: 0 0 10px #FFD700; }
-label { font-weight: 700; color: #FFD700; }
-</style>
+<div class="nav">
+    <a href="{{ url_for('dashboard') }}">← Back</a>
+    <span class="balance-badge">BALANCE: ${{ "%.2f"|format(wallet) }}</span>
+</div>
 
-<div class="container mt-4" style="max-width: 500px;">
-  <div class="fund-card">
-    <h2 style="color: #FFD700; font-weight: 900; margin-bottom: 20px;">Fund Wallet</h2>
+<h2 style="color:var(--yellow); margin-bottom:20px;">Fund Wallet with Card</h2>
 
-    <div class="balance-box">
-      <p>Current Balance</p>
-      <h2>${{ "%.2f"|format(wallet) }}</h2>
+<div class="card">
+    <div style="background:#2a2200; border:1px solid var(--yellow); border-radius:10px; padding:12px; margin-bottom:20px; font-size:14px;">
+        ⚠️ Minimum Funding: ₦15,000 = $10
     </div>
 
-    <form method="post">
-      <label class="form-label">Top Up Amount</label>
-      <div class="row g-2 mb-3">
-        <div class="col-6"><button type="submit" name="amount" value="5" class="btn btn-amount w-100">$5</button></div>
-        <div class="col-6"><button type="submit" name="amount" value="10" class="btn btn-amount w-100">$10</button></div>
-        <div class="col-6"><button type="submit" name="amount" value="20" class="btn btn-amount w-100">$20</button></div>
-        <div class="col-6"><button type="submit" name="amount" value="50" class="btn btn-amount w-100">$50</button></div>
-      </div>
+    <form method="POST">
+        <label>Email Address</label>
+        <input type="email" value="{{ current_user.email if current_user is defined else '' }}" disabled
+               style="opacity:0.7;">
 
-      <label class="form-label">Or Enter Custom Amount</label>
-      <input type="number" name="custom_amount" class="form-control mb-3" placeholder="Enter amount in USD" step="0.01" min="1">
+        <label>Amount (NGN)</label>
+        <input type="number" name="amount" placeholder="Minimum ₦15000" min="15000" step="100" required>
 
-      <button type="submit" class="btn btn-add w-100 mb-2">Add Funds to Wallet</button>
-      <p class="text-center" style="color: #555; font-size: 12px;">Demo Mode: Funds are added instantly</p>
+        <p class="muted" style="margin-bottom:16px;">
+            ₦1,500 = $1 → Your wallet will be credited in USD after payment.
+        </p>
+
+        <button type="submit" class="btn">Pay with Paystack</button>
     </form>
-    
-    <a href="/user_app" class="btn btn-back w-100">← Back to Dashboard</a>
-  </div>
 </div>
 {% endblock %}
