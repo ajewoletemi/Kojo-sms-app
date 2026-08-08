@@ -15,8 +15,7 @@
 
     <form method="POST">
         <label>Email Address</label>
-        <input type="email" value="{{ current_user.email if current_user is defined else '' }}" disabled
-               style="opacity:0.7;">
+        <input type="email" value="{{ user.email if user else '' }}" disabled style="opacity:0.7;">
 
         <label>Amount (NGN)</label>
         <input type="number" name="amount" placeholder="Minimum ₦15000" min="15000" step="100" required>
