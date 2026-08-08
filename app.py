@@ -12,7 +12,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
-from supabase import create_client, Client
+from supabase import create_client, Client as SupabaseClient
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.environ.get("SECRET_KEY") or "change-this-in-production"
@@ -24,15 +24,15 @@ db = SQLAlchemy(app)
 
 # ========== CONFIG ==========
 PAYSTACK_SECRET = os.environ.get("PAYSTACK_SECRET_KEY")
-TWILIO_SID = os.environ.get("TWILIO_ACCOUNT_SID")
-TWILIO_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
+TWILIO_SID = os.environ.get("TWILIO_ACCOUNT_SID") # FIXED
+TWILIO_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN") # FIXED
 TWILIO_PHONE = os.environ.get("TWILIO_PHONE_NUMBER")
 BTC_ADDRESS = os.environ.get("BITCOIN_WALLET_ADDRESS")
 
 # Supabase Client
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
-supabase: Client = None
+supabase: SupabaseClient = None
 if SUPABASE_URL and SUPABASE_KEY:
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -410,7 +410,7 @@ def my_numbers():
 def send_sms():
     user = get_current_user()
 
-    to_prefill = request.args.get("to", "") # <-- NEW: for Reply button from inbox
+    to_prefill = request.args.get("to", "")
 
     numbers = []
     if supabase:
@@ -469,7 +469,7 @@ def send_sms():
         wallet=user.wallet,
         numbers=numbers,
         cost_per_sms=COST_PER_SMS,
-        to_prefill=to_prefill # <-- NEW: pass to template
+        to_prefill=to_prefill
     )
 
 # ========== INBOX ==========
@@ -481,11 +481,11 @@ def inbox():
     if supabase:
         try:
             res = supabase.table("inbox")\
-               .select("*")\
-               .eq("user_id", str(user.id))\
-               .order("created_at", desc=True)\
-               .limit(100)\
-               .execute()
+              .select("*")\
+              .eq("user_id", str(user.id))\
+              .order("created_at", desc=True)\
+              .limit(100)\
+              .execute()
             messages = res.data or []
         except Exception as e:
             print("Inbox error:", e)
@@ -509,9 +509,9 @@ def twilio_incoming():
     if supabase:
         try:
             result = supabase.table("user_numbers")\
-               .select("user_id")\
-               .eq("phone_number", to_number)\
-               .execute()
+              .select("user_id")\
+              .eq("phone_number", to_number)\
+              .execute()
 
             if result.data:
                 user_id = result.data[0]["user_id"]
