@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Buy Virtual Number{% endblock %}
+{% block content %}
+<div class="nav">
+    <a href="{{ url_for('dashboard') }}">← Back</a>
+    <span class="balance-badge">BALANCE: ${{ "%.2f"|format(wallet) }}</span>
+</div>
+
+<h2 style="color:var(--yellow); margin-bottom:20px;">Buy Virtual Number</h2>
+
+<div class="card">
+    <p style="margin-bottom:16px;">Get a real Twilio number that can receive SMS. Cost: <strong>${{ cost }}</strong></p>
+
+    <form method="POST">
+        <label>Country (ISO code)</label>
+        <select name="country">
+            <option value="US">United States (+1)</option>
+            <option value="GB">United Kingdom (+44)</option>
+            <option value="CA">Canada (+1)</option>
+            <option value="AU">Australia (+61)</option>
+            <!-- Add more as needed -->
+        </select>
+
+        <p class="muted" style="margin:12px 0 20px;">
+            After purchase the number will appear in “My Numbers” and can receive SMS.
+        </p>
+
+        <button type="submit" class="btn">Buy Number — ${{ cost }}</button>
+    </form>
+</div>
+{% endblock %}
