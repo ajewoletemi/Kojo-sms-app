@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}My Numbers{% endblock %}
+{% block content %}
+<div class="nav">
+    <a href="{{ url_for('dashboard') }}">← Back</a>
+    <span class="balance-badge">BALANCE: ${{ "%.2f"|format(wallet) }}</span>
+</div>
+
+<h2 style="color:var(--yellow); margin-bottom:20px;">My Virtual Numbers</h2>
+
+{% if numbers %}
+    {% for n in numbers %}
+    <div class="card">
+        <div style="font-size:18px; font-weight:600;">{{ n.phone_number }}</div>
+        <div class="muted" style="margin-top:4px;">
+            Purchased: {{ n.purchased_at.strftime('%Y-%m-%d') if n.purchased_at else '—' }}
+            · {{ 'Active' if n.active else 'Inactive' }}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card">
+        <p class="muted">You don’t have any numbers yet.</p>
+        <a href="{{ url_for('buy_number') }}" class="btn" style="margin-top:12px;">Buy a Number</a>
+    </div>
+{% endif %}
+{% endblock %}
