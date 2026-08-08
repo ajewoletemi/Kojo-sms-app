@@ -1,63 +1,44 @@
 {% extends "base.html" %}
+{% block title %}Dashboard - KOJO SMS{% endblock %}
 {% block content %}
-<style>
-body { background: #0a0a1a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto; }
-.kojo-title { color: #FFD700; text-shadow: 0 0 15px #FFD700; font-size: 1.8rem; font-weight: 900; }
-.kojo-card {
-  background: #FFD700;
-  border-radius: 20px;
-  padding: 20px;
-  color: #000;
-  margin-bottom: 20px;
-}
-.kojo-card h4 { font-weight: 800; font-size: 13px; letter-spacing: 1px; margin-bottom: 5px; }
-.kojo-card h1 { font-weight: 900; font-size: 2.4rem; margin-bottom: 15px; }
-.btn-pill {
-  background: #000; color: #FFD700; border: none; font-weight: 800;
-  padding: 10px 18px; border-radius: 14px; font-size: 14px; margin-right: 10px;
-  display: inline-block; text-decoration: none;
-}
-.feature-card {
-  background: #13132b; border: 1px solid #222244; border-radius: 16px;
-  padding: 20px; margin-bottom: 15px; color: #fff;
-}
-.feature-card h3 { color: #FFD700; font-weight: 800; font-size: 1.15rem; margin-bottom: 8px; }
-.feature-card p { color: #a0a0c0; font-size: 14px; }
-.btn-yellow {
-  background: #FFD700; color: #000; border: none; font-weight: 800;
-  padding: 10px 22px; border-radius: 10px; margin-top: 12px; display: inline-block; text-decoration: none;
-}
-</style>
-
-<div class="container px-3 mt-3">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="kojo-title">KOJO</h2>
-    <a href="/logout" style="color: #fff; text-decoration: none; font-weight: 600;">Logout</a>
-  </div>
-
-  <!-- WALLET CARD -->
-  <div class="kojo-card">
-    <h4>WALLET BALANCE</h4>
-    <h1>${{ "%.2f"|format(wallet) }}</h1>
+<div class="nav">
+    <div class="logo">KOJO</div>
     <div>
-      <a href="/fund_wallet" class="btn-pill">Fund with Card</a>
-      <a href="/fund_btc" class="btn-pill">Fund with BTC</a>
+        <span class="balance-badge">${{ "%.2f"|format(wallet) }}</span>
+        <a href="{{ url_for('logout') }}" style="margin-left:12px; font-size:14px;">Logout</a>
     </div>
-  </div>
+</div>
 
-  <!-- BUY NUMBER CARD -->
-  <div class="feature-card">
-    <h3>Buy Virtual Number</h3>
-    <p>Get a virtual number to receive SMS Instantly<br>- $5</p>
-    <a href="#" class="btn-yellow">Buy Number</a> <!-- YELLOW BUTTON NOW -->
-  </div>
+<div class="yellow-card">
+    <div style="font-size:13px; opacity:0.8;">WALLET BALANCE</div>
+    <div style="font-size:32px; font-weight:800; margin:8px 0;">${{ "%.2f"|format(wallet) }}</div>
+    <div class="grid-2">
+        <a href="{{ url_for('fund_wallet') }}" class="btn btn-dark">Fund with Card</a>
+        <a href="{{ url_for('fund_btc') }}" class="btn btn-dark">Fund with BTC</a>
+    </div>
+</div>
 
-  <!-- SEND SMS CARD -->
-  <div class="feature-card">
-    <h3>Send SMS</h3>
-    <p>Compose and send messages to any <br>number. Cost: <b style="color: #fff;">$0.20 per SMS</b></p>
-    <a href="/send_sms" class="btn-yellow">Send SMS</a>
-  </div>
+<div class="card">
+    <h3 style="color:var(--yellow);">Buy Virtual Number</h3>
+    <p class="muted" style="margin:8px 0 16px;">Get a virtual number to receive SMS instantly — $5</p>
+    <a href="{{ url_for('buy_number') }}" class="btn">Buy Number</a>
+</div>
 
+<div class="card">
+    <h3 style="color:var(--yellow);">Send SMS</h3>
+    <p class="muted" style="margin:8px 0 16px;">Compose and send messages to any number. Cost: $0.20 per SMS</p>
+    <a href="{{ url_for('send_sms') }}" class="btn">Send SMS</a>
+</div>
+
+<div class="card">
+    <h3 style="color:var(--yellow); margin-bottom:12px;">Quick Links</h3>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+        <a href="{{ url_for('inbox') }}">📥 Inbox (Received SMS)</a>
+        <a href="{{ url_for('sent_messages') }}">📤 Sent Messages</a>
+        <a href="{{ url_for('my_numbers') }}">📱 My Numbers</a>
+        {% if session.role == 'admin' %}
+            <a href="{{ url_for('admin') }}">🛡️ Admin Panel</a>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
