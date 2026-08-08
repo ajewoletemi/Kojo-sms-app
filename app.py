@@ -14,7 +14,7 @@ from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.environ.get("SECRET_KEY")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.environ.get("SECRET_KEY") or "change-this-in-production"
 
 # Database (Supabase / Postgres)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
@@ -25,15 +25,17 @@ db = SQLAlchemy(app)
 PAYSTACK_SECRET = os.environ.get("PAYSTACK_SECRET_KEY")
 TWILIO_SID = os.environ.get("TWILIO_ACCOUNT_SID")
 TWILIO_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
-TWILIO_PHONE = os.environ.get("TWILIO_PHONE_NUMBER")  # fallback number
+TWILIO_PHONE = os.environ.get("TWILIO_PHONE_NUMBER")
 BTC_ADDRESS = os.environ.get("BITCOIN_WALLET_ADDRESS")
 
 COST_PER_SMS = 0.20          # USD
 COST_VIRTUAL_NUMBER = 5.00   # USD
-NGN_TO_USD_RATE = 1500       # ₦1500 = $1  →  ₦15000 = $10
+NGN_TO_USD_RATE = 1500       # ₦1500 = $1  →  ₦15,000 = $10
 MIN_FUND_USD = 10.00
 
-twilio_client = Client(TWILIO_SID, TWILIO_TOKEN) if TWILIO_SID and TWILIO_TOKEN else None
+twilio_client = None
+if TWILIO_SID and TWILIO_TOKEN:
+    twilio_client = Client(TWILIO_SID, TWILIO_TOKEN)
 
 # ========== MODELS ==========
 class User(db.Model):
@@ -64,7 +66,7 @@ class Message(db.Model):
     from_number = db.Column(db.String(20))
     to_number = db.Column(db.String(20))
     body = db.Column(db.Text)
-    status = db.Column(db.String(30), default="queued")
+    status = db.Column(db.String(50), default="queued")
     cost = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -118,7 +120,7 @@ def get_current_user():
 def index():
     if "user_id" in session:
         return redirect(url_for("dashboard"))
-    return render_template("index.html")  # or landing.html
+    return render_template("index.html")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -149,7 +151,7 @@ def register():
         flash("Account created successfully!", "success")
         return redirect(url_for("dashboard"))
 
-    return render_template("register.html")  # or signup.html
+    return render_template("register.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -174,7 +176,7 @@ def login():
 @app.route("/logout")
 def logout():
     session.clear()
-    flash("Logged out", "info")
+    flash("Logged out successfully", "info")
     return redirect(url_for("index"))
 
 # ========== DASHBOARD ==========
@@ -212,7 +214,6 @@ def fund_wallet():
         amount_usd = round(amount_ngn / NGN_TO_USD_RATE, 2)
         reference = str(uuid.uuid4())
 
-        # Create pending transaction
         tx = Transaction(
             user_id=user.id,
             type="fund_paystack",
@@ -244,7 +245,7 @@ def fund_wallet():
         try:
             res = requests.post(
                 "https://api.paystack.co/transaction/initialize",
-                json=data, headers=headers, timeout=15
+                json=data, headers=headers, timeout=20
             )
             result = res.json()
             if result.get("status"):
@@ -254,44 +255,46 @@ def fund_wallet():
         except Exception as e:
             flash(f"Payment error: {str(e)}", "danger")
 
-    return render_template("fund_wallet.html", wallet=user.wallet, min_ngn=15000)
+    return render_template("fund_wallet.html", wallet=user.wallet, user=user)
 
 @app.route("/paystack/callback")
 @login_required
 def paystack_callback():
     reference = request.args.get("reference")
     if not reference:
-        flash("No reference", "danger")
+        flash("No reference provided", "danger")
         return redirect(url_for("dashboard"))
 
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET}"}
-    res = requests.get(
-        f"https://api.paystack.co/transaction/verify/{reference}",
-        headers=headers, timeout=15
-    )
-    result = res.json()
+    try:
+        res = requests.get(
+            f"https://api.paystack.co/transaction/verify/{reference}",
+            headers=headers, timeout=15
+        )
+        result = res.json()
 
-    if result.get("status") and result["data"]["status"] == "success":
-        tx = Transaction.query.filter_by(reference=reference, status="pending").first()
-        if tx:
-            user = User.query.get(tx.user_id)
-            user.wallet += tx.amount
-            tx.status = "completed"
-            db.session.commit()
-            flash(f"Successfully funded ${tx.amount:.2f}", "success")
+        if result.get("status") and result["data"]["status"] == "success":
+            tx = Transaction.query.filter_by(reference=reference, status="pending").first()
+            if tx:
+                user = User.query.get(tx.user_id)
+                user.wallet += tx.amount
+                tx.status = "completed"
+                db.session.commit()
+                flash(f"Successfully funded ${tx.amount:.2f}!", "success")
+            else:
+                flash("Transaction already processed or not found", "warning")
         else:
-            flash("Transaction already processed or not found", "warning")
-    else:
-        flash("Payment verification failed", "danger")
+            flash("Payment verification failed", "danger")
+    except Exception as e:
+        flash(f"Verification error: {str(e)}", "danger")
 
     return redirect(url_for("dashboard"))
 
 @app.route("/paystack/webhook", methods=["POST"])
 def paystack_webhook():
-    # Optional extra safety – you can also rely on the callback
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if data and data.get("event") == "charge.success":
-        reference = data["data"]["reference"]
+        reference = data["data"].get("reference")
         tx = Transaction.query.filter_by(reference=reference, status="pending").first()
         if tx:
             user = User.query.get(tx.user_id)
@@ -336,28 +339,29 @@ def buy_number():
     user = get_current_user()
 
     if request.method == "POST":
-        if user.wallet < COST_VIRTUAL_NUMBER:
-            flash("Insufficient balance. You need $5.", "danger")
+        if not twilio_client:
+            flash("Twilio is not configured", "danger")
             return redirect(url_for("buy_number"))
 
-        country = request.form.get("country", "US")  # you can expand later
+        if user.wallet < COST_VIRTUAL_NUMBER:
+            flash("Insufficient balance. You need $5.00", "danger")
+            return redirect(url_for("buy_number"))
+
+        country = request.form.get("country", "US")
         try:
-            # Search available numbers
             available = twilio_client.available_phone_numbers(country).local.list(limit=5)
             if not available:
-                flash("No numbers available in that country right now", "danger")
+                flash("No numbers currently available in that country", "danger")
                 return redirect(url_for("buy_number"))
 
             number_to_buy = available[0].phone_number
 
-            # Purchase
             incoming = twilio_client.incoming_phone_numbers.create(
                 phone_number=number_to_buy,
-                sms_url=url_for("twilio_incoming", _external=True),  # for receiving
+                sms_url=url_for("twilio_incoming", _external=True),
                 sms_method="POST"
             )
 
-            # Deduct & save
             user.wallet -= COST_VIRTUAL_NUMBER
             vn = VirtualNumber(
                 user_id=user.id,
@@ -398,6 +402,10 @@ def send_sms():
     numbers = VirtualNumber.query.filter_by(user_id=user.id, active=True).all()
 
     if request.method == "POST":
+        if not twilio_client:
+            flash("Twilio is not configured", "danger")
+            return redirect(url_for("send_sms"))
+
         recipients_raw = request.form.get("recipients", "")
         message = request.form.get("message", "").strip()
         from_number = request.form.get("from_number") or TWILIO_PHONE
@@ -437,7 +445,7 @@ def send_sms():
                     from_number=from_number,
                     to_number=num,
                     body=message,
-                    status=f"failed: {str(e)}",
+                    status=f"failed: {str(e)[:80]}",
                     cost=0
                 ))
 
@@ -461,7 +469,7 @@ def send_sms():
         cost_per_sms=COST_PER_SMS
     )
 
-# ========== INBOX & HISTORY ==========
+# ========== INBOX & SENT ==========
 @app.route("/inbox")
 @login_required
 def inbox():
@@ -485,7 +493,6 @@ def twilio_incoming():
     to_number = request.form.get("To")
     body = request.form.get("Body", "")
 
-    # Find which user owns this number
     vn = VirtualNumber.query.filter_by(phone_number=to_number, active=True).first()
     if vn:
         db.session.add(Message(
@@ -498,7 +505,6 @@ def twilio_incoming():
         ))
         db.session.commit()
 
-    # Empty TwiML response
     resp = MessagingResponse()
     return str(resp)
 
@@ -532,7 +538,7 @@ def approve_btc(req_id):
         reference=f"btc-{req.id}"
     ))
     db.session.commit()
-    flash(f"Approved ${req.amount_usd} for {user.username}", "success")
+    flash(f"Approved ${req.amount_usd:.2f} for {user.username}", "success")
     return redirect(url_for("admin"))
 
 @app.route("/admin/reject_btc/<int:req_id>")
@@ -545,7 +551,7 @@ def reject_btc(req_id):
     flash("Request rejected", "info")
     return redirect(url_for("admin"))
 
-# One-time admin creator (remove after first use or protect it)
+# One-time admin creator
 @app.route("/create_first_admin", methods=["GET", "POST"])
 def create_first_admin():
     if User.query.filter_by(role="admin").first():
@@ -553,30 +559,49 @@ def create_first_admin():
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        username = request.form.get("username")
-        email = request.form.get("email")
-        password = request.form.get("password")
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not username or not email or not password:
+            flash("All fields required", "danger")
+            return redirect(url_for("create_first_admin"))
 
         admin = User(
             username=username,
             email=email,
             password_hash=generate_password_hash(password),
             role="admin",
-            wallet=0
+            wallet=0.0
         )
         db.session.add(admin)
         db.session.commit()
-        flash("Admin created! You can now log in.", "success")
+        flash("Admin created successfully! You can now log in.", "success")
         return redirect(url_for("login"))
 
     return """
-    <h2>Create First Admin</h2>
-    <form method="post">
-        Username: <input name="username"><br>
-        Email: <input name="email"><br>
-        Password: <input name="password" type="password"><br>
-        <button type="submit">Create Admin</button>
-    </form>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Create Admin</title>
+        <style>
+            body { background:#0b0b0b; color:#fff; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+            form { background:#161616; padding:30px; border-radius:16px; width:320px; }
+            input { width:100%; padding:12px; margin:8px 0 16px; border-radius:8px; border:1px solid #333; background:#111; color:#fff; }
+            button { width:100%; padding:12px; background:#ffcc00; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+            h2 { color:#ffcc00; text-align:center; }
+        </style>
+    </head>
+    <body>
+        <form method="post">
+            <h2>Create First Admin</h2>
+            <input name="username" placeholder="Username" required>
+            <input name="email" type="email" placeholder="Email" required>
+            <input name="password" type="password" placeholder="Password" required>
+            <button type="submit">Create Admin</button>
+        </form>
+    </body>
+    </html>
     """
 
 # ========== RUN ==========
